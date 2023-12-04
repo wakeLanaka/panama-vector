@@ -210,6 +210,7 @@ extern "C" {
   void JNICALL JVM_RegisterVectorSupportMethods(JNIEnv *env, jclass vsclass);
   void JNICALL JVM_RegisterGPUSupportMethods(JNIEnv *env, jclass vsclass);
   void JNICALL JVM_RegisterSVMBufferSupportMethods(JNIEnv *env, jclass vsclass);
+  void JNICALL JVM_RegisterExecBufferSupportMethods(JNIEnv *env, jclass vsclass);
 #if INCLUDE_JVMCI
   jobject  JNICALL JVM_GetJVMCIRuntime(JNIEnv *env, jclass c);
   jlong    JNICALL JVM_ReadSystemPropertiesInfo(JNIEnv *env, jclass c, jintArray offsets);
@@ -232,6 +233,7 @@ static JNINativeMethod lookup_special_native_methods[] = {
   { CC"Java_jdk_internal_vm_vector_VectorSupport_registerNatives", nullptr, FN_PTR(JVM_RegisterVectorSupportMethods)},
   { CC"Java_jdk_internal_vm_vector_GPUSupport_registerNatives", nullptr, FN_PTR(JVM_RegisterGPUSupportMethods)},
   { CC"Java_jdk_internal_vm_vector_SVMBufferSupport_registerNatives", nullptr, FN_PTR(JVM_RegisterSVMBufferSupportMethods)},
+  { CC"Java_jdk_internal_vm_vector_ExecBufferSupport_registerNatives", nullptr, FN_PTR(JVM_RegisterExecBufferSupportMethods)},
 #if INCLUDE_JVMCI
   { CC"Java_jdk_vm_ci_runtime_JVMCI_initializeRuntime",            nullptr, FN_PTR(JVM_GetJVMCIRuntime)             },
   { CC"Java_jdk_vm_ci_services_Services_readSystemPropertiesInfo", nullptr, FN_PTR(JVM_ReadSystemPropertiesInfo)    },

@@ -13,7 +13,7 @@ public class SVMBufferSupport {
 
     public static native long CreateProgram(long jContext, String jKernelString);
 
-    public static native long ReleaseProgram(long jContext, String jKernelString);
+    public static native void ReleaseProgram(long jContext);
 
     public static native long CreateCommandQueue(long jContext, long jDevice);
 
@@ -39,13 +39,87 @@ public class SVMBufferSupport {
 
     public static native long CreateWriteSVMBuffer(long jContext, int length);
 
-    public static native int ReadSVMBuffer(long jCommandQueue, long jBuffer, int element, int length);
+    public static native float ReadSVMBuffer(long jCommandQueue, long jBuffer, int element, int length);
 
     public static native void AddSVMBuffer(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, long jBuffer3, int length);
 
-    public static native void FmaSVMBuffer(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, long jBuffer3, int length);
+    public static native void FmaSVMBuffer(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, long jBuffer3, long jBuffer4, int length);
 
     public static native void MatrixFmaSVMBuffer(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, long jBuffer3, int K, int N, int k, int length);
 
     public static native float ReduceAdd(long jContext, long jProgram, long jCommandQueue, long jBuffer, int length);
+
+    public static native void ReduceAdd(long jProgram, long jCommandQueue, long b1, long b2, int size, int length);
+
+    public static native void Subtract(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, long jBuffer3, int length);
+
+    public static native void SubtractionMinuend(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, float jMinuend, int length);
+
+    public static native void SubtractionSubtrahend(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, float jSubtrahend, int length);
+
+    public static native void Multiply(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, float jFactor, int length);
+
+    public static native void Multiply(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, long jBuffer3, int length);
+
+    public static native void Sqrt(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, int length);
+
+    public static native void Division(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, float jDivisor, int length);
+
+    public static native void Division(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, long jBuffer3, int length);
+
+    public static native void Log(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, int length);
+
+    public static native void Exp(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, int length);
+
+    public static native void Abs(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, int length);
+
+    public static native void CompareGT(long jProgram, long jCommandQueue, long jBuffer1, float comparee, long jBuffer2, int length);
+
+    public static native void Blend(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, long jMask, long jBuffer3, int length);
+
+    public static native void BlackScholes(long jProgram, long jCommandQueue, float sig, float r, long xBuffer, long callBuffer, long putBuffer, long tBuffer, long s0, int length);
+
+    // public static native void line1(long jProgram, long jCommandQueue, long b1, long b2, float v1, int length);
+
+    // public static native void line2(long jProgram, long jCommandQueue, long b1, long b2, long b3, int length);
+
+    // public static native void line3(long jProgram, long jCommandQueue, long b1, long b2, long b3, int length);
+
+    // public static native void line4(long jProgram, long jCommandQueue, long b1, long b2, float v1, int length);
+
+    // public static native void line5(long jProgram, long jCommandQueue, long b1, long b2, long b3, long b4, long b5, float v1, int length);
+
+    // public static native void line6(long jProgram, long jCommandQueue, long b1, long b2, long b3, int length);
+
+    // public static native void line7(long jProgram, long jCommandQueue, long b1, long b2, long b3, long b4, long b5, long b6, int length);
+
+    // public static native void line8(long jProgram, long jCommandQueue, long b1, long b2, long b3, long b4, int length);
+
+    // public static native void Product(long jProgram, long jCommandQueue, long b1, float v1, float v2, int v3, int length);
+
+    public static native void EachMultiply(long jProgram, long jCommandQueue, long b1, long b2, long b3, int length, int length2);
+
+    public static native void Sin(long jProgram, long jCommandQueue, long b1, long b2, int length);
+
+    public static native void Cos(long jProgram, long jCommandQueue, long b1, long b2, int length);
+
+    public static native void Cos(long jProgram, long jCommandQueue, long b1, long b2, long b3, int length);
+
+    public static native void MultiplyInPlaceRepeat(long jProgram, long jCommandQueue, long b1, long b2, int size, int length);
+
+    public static native void DFT(long jProgram, long jCommandQueue, long b1, long b2, int size);
+
+    public static native void MultiplyDivide(long jProgram, long jCommandQueue, long b1, long b2, float v1, float v2, float v3, int length);
+
+    public static native void ForSum(long jProgram, long jCommandQueue, long b1, long b2, float v1, int length);
+
+    public static native void ExecuteKernel(long jKernel, long jCommandQueue, int length);
+
+    public static native long CreateKernel(long jKernel);
+
+    public static native void SetKernelArgument(long jKernel, long buffer, int argumentNumber);
+
+    public static native void SetKernelArgument(long jKernel, int value, int argumentNumber);
+
+    public static native void SetKernelArgument(long jKernel, float value, int argumentNumber);
 }
