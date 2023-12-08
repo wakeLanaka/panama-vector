@@ -27,13 +27,13 @@ public class SVMBufferSupport {
 
     public static native long CopyFromArray(long jContext, long jCommandQueue, int[] jArray);
 
-    public static native long CopyFromFloatArray(long jContext, long jCommandQueue, float[] jArray);
+    public static native long CopyFromArray(long jContext, long jCommandQueue, float[] jArray);
 
     public static native void CopyToArray(long jContext, long jCommandQueue, long jBuffer, int[] jArray);
 
     public static native void CopyToFloatArray(long jContext, long jCommandQueue, long jBuffer, float[] jArray);
 
-    public static native void ReleaseSVMBuffer(long jCommandQueue, long jBuffer);
+    public static native void ReleaseSVMBuffer(long jContext, long jCommandQueue, long jBuffer);
 
     public static native long CreateReadSVMBuffer(long jContext, int length);
 
@@ -79,37 +79,13 @@ public class SVMBufferSupport {
 
     public static native void BlackScholes(long jProgram, long jCommandQueue, float sig, float r, long xBuffer, long callBuffer, long putBuffer, long tBuffer, long s0, int length);
 
-    // public static native void line1(long jProgram, long jCommandQueue, long b1, long b2, float v1, int length);
-
-    // public static native void line2(long jProgram, long jCommandQueue, long b1, long b2, long b3, int length);
-
-    // public static native void line3(long jProgram, long jCommandQueue, long b1, long b2, long b3, int length);
-
-    // public static native void line4(long jProgram, long jCommandQueue, long b1, long b2, float v1, int length);
-
-    // public static native void line5(long jProgram, long jCommandQueue, long b1, long b2, long b3, long b4, long b5, float v1, int length);
-
-    // public static native void line6(long jProgram, long jCommandQueue, long b1, long b2, long b3, int length);
-
-    // public static native void line7(long jProgram, long jCommandQueue, long b1, long b2, long b3, long b4, long b5, long b6, int length);
-
-    // public static native void line8(long jProgram, long jCommandQueue, long b1, long b2, long b3, long b4, int length);
-
-    // public static native void Product(long jProgram, long jCommandQueue, long b1, float v1, float v2, int v3, int length);
-
-    public static native void EachMultiply(long jProgram, long jCommandQueue, long b1, long b2, long b3, int length, int length2);
-
     public static native void Sin(long jProgram, long jCommandQueue, long b1, long b2, int length);
 
     public static native void Cos(long jProgram, long jCommandQueue, long b1, long b2, int length);
 
-    public static native void Cos(long jProgram, long jCommandQueue, long b1, long b2, long b3, int length);
-
     public static native void MultiplyInPlaceRepeat(long jProgram, long jCommandQueue, long b1, long b2, int size, int length);
 
     public static native void DFT(long jProgram, long jCommandQueue, long b1, long b2, int size);
-
-    public static native void MultiplyDivide(long jProgram, long jCommandQueue, long b1, long b2, float v1, float v2, float v3, int length);
 
     public static native void ForSum(long jProgram, long jCommandQueue, long b1, long b2, float v1, int length);
 

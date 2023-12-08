@@ -1,739 +1,560 @@
 package jdk.incubator.vector;
 
-import java.util.HashMap;
-import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import jdk.internal.vm.vector.SVMBufferSupport;
+import java.util.Set;
 import jdk.incubator.vector.GPUInformation;
+import jdk.internal.vm.vector.SVMBufferSupport;
 
 /**
- * How do I know if it is first operation after = ? Then the first * has to be removed
- * How do I let the user use I?
- * How do I distinguish between the types of the internal variables?
- * How do I get the length?
- * How do I know the types for the local variable?
- * How do I distinguish between array and values?
+ *  Throw error if cos body is not correct type
  */
 public class KernelBuilder {
 
-    // private Map<Integer, Object> objects = new HashMap<>();
-    /**
-     *  ABC
-     */
-    public LinkedHashSet<Object> objects = new LinkedHashSet<Object>();
-
-    /**
-     *  ABC
-     */
-    public Map<Integer, String> objectVariables = new HashMap<>();
-
     private static int localVariableNumber = 0;
-
-
-    private long program = 0;
 
     private static int variableNameCounter = 0;
 
-    /**
-     *  ABC
-     */
-    public int length = 0;
+    private Map<Object, String> objectVariables = new LinkedHashMap<>();
 
     /**
      *  Abc
      */
-    public String kernelBody = "";
+    public StringBuilder kernelString = new StringBuilder();
+
+    private long program = 0;
+
+    private int threads = 0;
 
     /**
-     *  ABC
+     *  Creates a KernelBuilder
+     *  @param threads to be executed on the GPU
      */
-    public String kernelHeader = "";
+    public KernelBuilder(int threads){
+        this.threads = threads;
+        KernelBuilder.variableNameCounter++;
+    }
 
-    /**
-     *  ABC
-     */
-    public String kernel = "";
-
-    /**
-     *  ABC
-     */
-    public String localName = "";
-
-    /**
-     *  Abc
-     *  @param b1 abc
-     *  @param b2 abc
-     *  @param size abc
-     */
-    public KernelBuilder(SVMBuffer b1, SVMBuffer b2, int size){
-        kernel = "__kernel void exec(__global float * A, __global float * B, int k){int i = get_global_id(0);";
+    private KernelBuilder(){
+        KernelBuilder.variableNameCounter++;
     }
 
 
-    /**
-     *  Abc
-     *  @param kernelBody abc
-     */
-    public KernelBuilder(String kernelBody){
+    private KernelBuilder(Map<Object, String> objectVariables){
         KernelBuilder.variableNameCounter++;
-        localName = getLocalVariableName();
-        this.kernelHeader = "__kernel void exec(";
-        this.kernelBody = kernelBody;
-    }
-
-    /**
-     *  Abc
-     *  @param kernelBody abc
-     *  @param objects abc
-     *  @param objectVariables abc
-     */
-    public KernelBuilder(String kernelBody, LinkedHashSet<Object> objects, Map<Integer, String> objectVariables){
-        KernelBuilder.variableNameCounter++;
-        this.objects = objects;
         this.objectVariables = objectVariables;
-        localName = getLocalVariableName();
-        this.kernelHeader = "__kernel void exec(";
-        this.kernelBody = kernelBody;
     }
 
-    // /**
-    //  *  Abc
-    //  *  @param kernelBody abc
-    //  */
-    // public KernelBuilder(String kernelBody){
-    //     // this.variableNameCounter = 0;
-    //     this.kernelHeader = "__kernel void exec(";
-    //     this.kernelBody = kernelBody;
-    // }
 
-    /**
-     *  ABC
-     *  @return abc
-     */
-    public KernelBuilder Iota(){
-        var kb = new KernelBuilder("");
-        kb.localName = "i";
-        return kb;
-    }
-
-    /**
-     *  ABC
-     *  @param length abc
-     *  @return abc
-     */
-    public static KernelBuilder CreateHeader(int length){
-        var kb = new KernelBuilder("");
-        kb.length = length;
-        return kb;
-    }
-
-    /**
-     *  ABC
-     *  @return abc
-     */
-    public static KernelBuilder CreateDef(){
-        String kernelBody = "float x1 = ";
-        return new KernelBuilder(kernelBody);
-    }
-
-    /**
-     *  ABC
-     *  @param b1 abc
-     *  @return abc
-     */
-    public KernelBuilder SetAdd(SVMBuffer b1){
-        this.length = b1.length;
-        var v1 = this.getVariableName(b1);
-        if(this.program != 0){
-            return this;
-        }
-        this.kernelBody += v1 + "[i] += ";
-        return this;
-    }
-
-    /**
-     *  ABC
-     *  @param kb abc
-     *  @return abc
-     */
-    public KernelBuilder Combine(KernelBuilder kb){
-        if(this.program != 0){
-            return this;
-        }
-
-        // this.objects.addAll(kb.objects);
-        for(var obj : this.objects){
-            if (obj instanceof SVMBuffer){
-                this.kernelHeader += "__global float * " + kb.getVariableName(obj) + ",";
-            } else {
-                this.kernelHeader += "int " + kb.getVariableName(obj) + ",";
-            }
-        }
-
-        this.kernelHeader += "{int i = get_global_id(0); " + this.kernelBody + ";}";
-        // this.kernelHeader += "{int i = get_global_id(0); " + this.kernelBody + "; if(i == 15){float angle = i * 2.0f * 3.141592653589793f * a1/16; printf(\"angle[%d]: %.8f\\n\",i, angle);}}";
-        // this.kernelHeader += "{int i = get_global_id(0); " + this.kernelBody + "; printf(\"a0: %.2f\\n\", a0[i]); printf(\"a2: %.2f\\n\", a2[i]); printf(\"a1: %d\\n\", a1);}";
-        return this;
-    }
-
-    private void createHeader(){
-        for(var obj : this.objects){
-            switch(obj){
-                case SVMBuffer buffer -> this.kernelHeader += "__global float * " + this.getVariableName(obj) + ",";
-                case Float value -> this.kernelHeader += "float " + this.getVariableName(obj) + ",";
-                case Integer value -> this.kernelHeader += "int " + this.getVariableName(obj) + ",";
-                default -> {}
-            }
-        }
-        this.kernelHeader = this.kernelHeader.substring(0, this.kernelHeader.length() - 1) + ")";
-    }
-
-    private void setKernelArgument(long kernel, Object object, int argumentNumber){
-        switch(object){
-            case SVMBuffer buffer -> SVMBufferSupport.SetKernelArgument(kernel,buffer.svmBuffer, argumentNumber);
-            case Integer value -> SVMBufferSupport.SetKernelArgument(kernel, value.intValue(), argumentNumber);
-            case Float value -> SVMBufferSupport.SetKernelArgument(kernel, value.floatValue(), argumentNumber);
-            default -> System.out.println("Error");
-        }
-    }
-
-    /**
-     *  ABC
-     *  @param object abc
-     *  @return abc
-     */
-    public String getVariableName(Object object){
-        String variableName = objectVariables.get(object.hashCode());
+    private String getVariableName(Object object){
+        String variableName = objectVariables.get(object);
 
         if (variableName == null){
             variableName = "a" + variableNameCounter;
             KernelBuilder.variableNameCounter++;
-            objectVariables.put(object.hashCode(), variableName);
-            objects.add(object);
+            objectVariables.put(object, variableName);
         }
-        // System.out.println("variable: " + variableName);
         return variableName;
     }
 
     /**
-     *  abc
-     *  @return abc
+     *  Get the current kernel
+     *  @return current kernel
      */
-    public KernelBuilder Cos(){
-        var kb = new KernelBuilder("", objects, objectVariables);
-        if(this.program != 0){
-            return this;
-        }
-        kb.kernelBody = this.kernelBody + "float " + kb.localName + "=" + "cos(" + this.localName + ");";
-        return kb;
-
-        // if(this.program != 0){
-        //     return this;
-        // }
-        // int index = this.kernelBody.indexOf('=');
-        // if(index == -1){
-        //     this.kernelBody = "cos(" + this.kernelBody + ")";
-        // } else{
-        //     this.kernelBody = this.kernelBody.substring(0,index + 1) + "cos(" + this.kernelBody.substring(index + 1) + ")";
-        // }
-        // return this;
+    public String getKernelString(){
+        return kernelString.toString();
     }
 
     /**
-     *  ABC
-     *  @param f1 abc
-     *  @return abc
+     *  Use the opencl global_id(0) variable
+     *  @return new KernelBuilder
      */
-    public KernelBuilder MultiplyI(float f1){
-        if(this.program != 0){
-            return this;
-        }
-        this.kernelBody += "i * " + f1;
-        return this;
+    public KernelStatement Iota(){
+        var statement = new KernelStatement(Integer.TYPE, this.kernelString, "i");
+        return statement;
     }
 
     /**
-     *  ABC
-     *  @param b1 abc
-     *  @return abc
+     *  Creates a new variable representing the value
+     *  @param value of the variable
+     *  @return new KernelBuilder representing the variable
      */
-    public KernelBuilder Multiply(SVMBuffer b1){
-        var v1 = getVariableName(b1);
-        if(this.program != 0){
-            return this;
-        }
-        this.kernelBody += " * " + v1 + "[i]";
-        return this;
+    public KernelStatement Var(float value){
+        var variableName = getVariableName(value);
+        var statement = new KernelStatement(Float.TYPE, this.kernelString, variableName);
+        return statement;
     }
 
     /**
-     *  ABC
-     *  @param f1 abc
-     *  @return abc
+     *  Creates a new variable representing the buffer element
+     *  @param buffer containing the elements
+     *  @return new KernelBuilder representing the buffer
      */
-    public KernelBuilder Var(float f1){
-        var kb = new KernelBuilder("", objects, objectVariables);
-        var v1 = getVariableName(f1);
-        if(this.program != 0){
-            return this;
-        }
-        kb.kernelBody = this.kernelBody + "float " + kb.localName + "=" + v1 + ";";
-        return kb;
+    public KernelStatement Var(SVMBuffer buffer){
+        // TODO change type
+        var variableName = getVariableName(buffer);
+        var statement = new KernelStatement(Float.TYPE, this.kernelString, variableName + "[i]");
+        return statement;
     }
 
     /**
-     *  ABC
-     *  @param b1 abc
-     *  @return abc
+     *  Creates a new variable representing the value
+     *  @param value of the variable
+     *  @return new KernelBuilder representing the variable
      */
-    public KernelBuilder Var(SVMBuffer b1){
-        var kb = new KernelBuilder("", objects, objectVariables);
-        var v1 = getVariableName(b1);
-        if(this.program != 0){
-            return this;
-        }
-        kb.kernelBody = this.kernelBody + "float " + kb.localName + "=" + v1 + "[i];";
-        return kb;
+    public KernelStatement Var(int value){
+        var variableName = getVariableName(value);
+        var statement = new KernelStatement(Integer.TYPE, this.kernelString, variableName);
+        return statement;
     }
 
     /**
-     *  ABC
-     *  @param i1 abc
-     *  @return abc
+     *  Executes the KernelBuilder on the GPU
+     *  @param info of the GPU
+     *  @param kernelBuilder to be executed on the GPU 
      */
-    public KernelBuilder Var(int i1){
-        var kb = new KernelBuilder("", objects, objectVariables);
-        var v1 = getVariableName(i1);
-        if(this.program != 0){
-            return this;
-        }
-        kb.kernelBody = this.kernelBody + "int " + kb.localName + "=" + v1 + ";";
-        return kb;
+    public void ExecKernel(GPUInformation info, KernelBuilder kernelBuilder){
+        ExecKernel(info, kernelBuilder.kernelString);
     }
 
     /**
-     *  ABC
-     *  @param b1 abc
-     *  @param i1 abc
-     *  @return abc
+     *  Executes the kernelString on the GPU
+     *  @param info of the GPU
+     *  @param kernelString to be executed on the GPU
      */
-    public KernelBuilder Mul(SVMBuffer b1, Integer i1){
-        var kb = new KernelBuilder("", objects, objectVariables);
-        var v1 = getVariableName(b1);
-        var v2 = getVariableName(i1);
-        if(this.program != 0){
-            return this;
-        }
-        kb.kernelBody = this.kernelBody + "float " + kb.localName + "=" + this.localName + " * " + v1 + "["+ v2 + "]" + ";";
-        return kb;
-    }
-
-    /**
-     *  ABC
-     *  @param b1 abc
-     *  @param s1 abc
-     *  @return abc
-     */
-    public KernelBuilder Mul(SVMBuffer b1, String s1){
-        var kb = new KernelBuilder("", objects, objectVariables);
-        var v1 = getVariableName(b1);
-        if(this.program != 0){
-            return this;
-        }
-        kb.kernelBody = this.kernelBody + "float " + kb.localName + "=" + this.localName + " * " + v1 + "["+ s1 + "]" + ";";
-        return kb;
-    }
-
-    /**
-     *  ABC
-     *  @param b1 abc
-     *  @param kb1 abc
-     *  @return abc
-     */
-    public static KernelBuilder AddAssign(SVMBuffer b1, KernelBuilder kb1){
-        var kb = new KernelBuilder("", kb1.objects, kb1.objectVariables);
-        var v1 = kb.getVariableName(b1);
-
-        kb.kernelBody = kb1.kernelBody + v1 + "[i] += " + kb1.localName + ";";
-        return kb;
-    }
-
-    private String getLocalVariableName(){
-        var name = "l" + KernelBuilder.localVariableNumber;
-        KernelBuilder.localVariableNumber++;
-        return name;
-    }
-
-    /**
-     *  ABC
-     *  @param f1 abc
-     *  @return abc
-     */
-    public KernelBuilder MulArr(float f1){
-        var kb = new KernelBuilder("", objects, objectVariables);
-        var v1 = getVariableName(f1);
-        if(this.program != 0){
-            return this;
-        }
-        kb.kernelBody = this.kernelBody + "float " + kb.localName + "=" + this.localName + " * " + v1 + ";";
-        return kb;
-    }
-
-    /**
-     *  ABC
-     *  @param kb1 abc
-     *  @return abc
-     */
-    public KernelBuilder MulArr(KernelBuilder kb1){
-        var kb = new KernelBuilder("", objects, objectVariables);
-        if(this.program != 0){
-            return this;
-        }
-        kb.kernelBody = this.kernelBody + "float " + kb.localName + "=" + this.localName + " * " + kb1.localName + ";";
-        return kb;
-    }
-
-    /**
-     *  ABC
-     *  @param b1 abc
-     *  @return abc
-     */
-    public KernelBuilder MulArr(SVMBuffer b1){
-        var kb = new KernelBuilder("", objects, objectVariables);
-        var v1 = getVariableName(b1);
-        if(this.program != 0){
-            return this;
-        }
-        kb.kernelBody = this.kernelBody + "float " + kb.localName + "=" + this.localName + " * " + v1 + "[i];";
-        return kb;
-    }
-
-    /**
-     *  ABC
-     *  @param i1 abc
-     *  @return abc
-     */
-    public KernelBuilder Mul(Integer i1){
-        var kb = new KernelBuilder("", objects, objectVariables);
-        var v1 = getVariableName(i1);
-        if(this.program != 0){
-            return this;
-        }
-        kb.kernelBody = this.kernelBody + "float " + kb.localName + "=" + this.localName + " * " + v1 + ";";
-        return kb;
-    }
-
-    /**
-     *  ABC
-     *  @param s1 abc
-     *  @return abc
-     */
-    public KernelBuilder Mul(String s1){
-        var kb = new KernelBuilder("", objects, objectVariables);
-        if(this.program != 0){
-            return this;
-        }
-        kb.kernelBody = this.kernelBody + "float " + kb.localName + "=" + this.localName + " * " + s1 + ";";
-        return kb;
-    }
-
-
-    /**
-     *  ABC
-     *  @param f1 abc
-     *  @return abc
-     */
-    public KernelBuilder Mul(Float f1){
-        var kb = new KernelBuilder("", objects, objectVariables);
-        var v1 = getVariableName(f1);
-        if(this.program != 0){
-            return this;
-        }
-        kb.kernelBody += this.kernelBody + "float " + kb.localName + "=" + this.localName + " * " + v1 + ";";
-        return kb;
-    }
-
-    /**
-     *  ABC
-     *  @param f1 abc
-     *  @return abc
-     */
-    public KernelBuilder AddArr(Float f1){
-        var kb = new KernelBuilder("", objects, objectVariables);
-        var v1 = getVariableName(f1);
-        if(this.program != 0){
-            return this;
-        }
-        kb.kernelBody += this.kernelBody + "float " + kb.localName + "=" + this.localName + " + " + v1 + ";";
-        return kb;
-    }
-
-    /**
-     *  ABC
-     *  @param kb1 abc
-     *  @return abc
-     */
-    public KernelBuilder AddArr(KernelBuilder kb1){
-        var kb = new KernelBuilder("", objects, objectVariables);
-        if(this.program != 0){
-            return this;
-        }
-        kb.kernelBody += kb1.kernelBody + this.kernelBody + "float " + kb.localName + "=" + this.localName + " + " + kb1.localName + ";";
-        return kb;
-    }
-
-    /**
-     *  ABC
-     *  @param kb1 abc
-     *  @return abc
-     */
-    public KernelBuilder SubArr(KernelBuilder kb1){
-        var kb = new KernelBuilder("", objects, objectVariables);
-        if(this.program != 0){
-            return this;
-        }
-        kb.kernelBody += this.kernelBody + "float " + kb.localName + "=" + this.localName + " - " + kb1.localName + ";";
-        return kb;
-    }
-
-    /**
-     *  ABC
-     *  @param i1 abc
-     *  @return abc
-     */
-    public KernelBuilder Div(Integer i1){
-        var kb = new KernelBuilder("", objects, objectVariables);
-        var v1 = getVariableName(i1);
-        if(this.program != 0){
-            return this;
-        }
-        kb.kernelBody += this.kernelBody + "float " + kb.localName + "=" + this.localName + " / " + v1 + ";";
-        return kb;
-    }
-
-    /**
-     *  ABC
-     *  @param kb1 abc
-     *  @return abc
-     */
-    public KernelBuilder Div(KernelBuilder kb1){
-        var kb = new KernelBuilder("", objects, objectVariables);
-        if(this.program != 0){
-            return this;
-        }
-        kb.kernelBody += this.kernelBody + "float " + kb.localName + "=" + this.localName + " / " + kb1.localName + ";";
-        return kb;
-    }
-
-    /**
-     *  ABC
-     *  @param kb1 abc
-     *  @return abc
-     */
-    public KernelBuilder DivArr(KernelBuilder kb1){
-        var kb = new KernelBuilder("", objects, objectVariables);
-        if(this.program != 0){
-            return this;
-        }
-        kb.kernelBody += kb1.kernelBody + this.kernelBody + "float " + kb.localName + "=" + this.localName + " / " + kb1.localName + ";";
-        return kb;
-    }
-
-    /**
-     *  ABC
-     *  @param f1 abc
-     *  @return abc
-     */
-    public KernelBuilder Div(Float f1){
-        var kb = new KernelBuilder("", objects, objectVariables);
-        var v1 = getVariableName(f1);
-        if(this.program != 0){
-            return this;
-        }
-        kb.kernelBody += this.kernelBody + "float " + kb.localName + "=" + this.localName + " / " + v1 + ";";
-        return kb;
-    }
-
-    /**
-     *  ABC
-     *  @param b1 abc
-     *  @return abc
-     */
-    public KernelBuilder DivArr(SVMBuffer b1){
-        var kb = new KernelBuilder("", objects, objectVariables);
-        var v1 = getVariableName(b1);
-        if(this.program != 0){
-            return this;
-        }
-        kb.kernelBody += this.kernelBody + "float " + kb.localName + "=" + this.localName + " / " + v1 + "[i];";
-        return kb;
-    }
-
-    /**
-     *  ABC
-     *  @param b1 abc
-     *  @return abc
-     */
-    public KernelBuilder Div(SVMBuffer b1){
-        var kb = new KernelBuilder("", objects, objectVariables);
-        var v1 = getVariableName(b1);
-        if(this.program != 0){
-            return this;
-        }
-        kb.kernelBody += this.kernelBody + "float " + kb.localName + "=" + this.localName + " / " + v1 + "[i];";
-        return kb;
-    }
-
-    /**
-     *  ABC
-     *  @return abc
-     */
-    public KernelBuilder LogArr(){
-        var kb = new KernelBuilder("", objects, objectVariables);
-        if(this.program != 0){
-            return this;
-        }
-        kb.kernelBody = this.kernelBody + "float " + kb.localName + "=" + "log(" + this.localName + ");";
-        return kb;
-    }
-
-    /**
-     *  ABC
-     *  @return abc
-     */
-    public KernelBuilder ExpArr(){
-        var kb = new KernelBuilder("", objects, objectVariables);
-        if(this.program != 0){
-            return this;
-        }
-        kb.kernelBody = this.kernelBody + "float " + kb.localName + "=" + "exp(" + this.localName + ");";
-        return kb;
-    }
-
-    /**
-     *  ABC
-     *  @return abc
-     */
-    public KernelBuilder SqrtArr(){
-        var kb = new KernelBuilder("", objects, objectVariables);
-        if(this.program != 0){
-            return this;
-        }
-        kb.kernelBody = this.kernelBody + "float " + kb.localName + "=" + "sqrt(" + this.localName + ");";
-        return kb;
-    }
-
-    /**
-     *  ABC
-     *  @param info abc
-     *  @param kb abc
-     */
-    public void ExecKernel(GPUInformation info, KernelBuilder kb){
-        long kernel = 0;
-        this.objects = kb.objects;
-        this.objectVariables = kb.objectVariables;
-
+    public void ExecKernel(GPUInformation info, StringBuilder kernelString){
         if (this.program == 0){
-            createHeader();
-            String kernelString = this.kernelHeader + "{int i = get_global_id(0); " + kb.kernelBody + "}";
-            // System.out.println("ExecKernel: " + kernelString);
-            this.program = SVMBufferSupport.CreateProgram(info.GetContext(), kernelString);
+            createKernel(kernelString, this.objectVariables.keySet());
+            this.program = SVMBufferSupport.CreateProgram(info.GetContext(), kernelString.toString());
         }
 
-        // System.out.println("ExecKernel: " + this.objects.size());
-        // var values = kb.objectVariables.values().toArray();
-        // for(int i = 0; i < values.length; i++){
-        //     System.out.println("val:" + values[i]);
-        // }
+        long kernel = SVMBufferSupport.CreateKernel(program);
 
-        kernel = SVMBufferSupport.CreateKernel(this.program);
-        var arr = objects.toArray();
+        setKernelArguments(kernel, this.objectVariables.keySet());
 
+        resetKernelBuilder();
+
+        SVMBufferSupport.ExecuteKernel(kernel, info.GetCommandQueue(), this.threads);
+    }
+
+    private void createKernel(StringBuilder str, Set<Object> variables){
+        str.insert(0, "{int i = get_global_id(0); ");
+        str.insert(0, createKernelSignature(this.objectVariables.keySet()));
+        str.append("}");
+    }
+
+    private String createKernelSignature(Set<Object> arguments){
+        String kernelSignature = "__kernel void exec(";
+        for(var obj : arguments){
+            switch(obj){
+                case SVMBuffer buffer -> kernelSignature += "__global float * " + this.getVariableName(obj) + ",";
+                case Float value -> kernelSignature += "float " + this.getVariableName(obj) + ",";
+                case Integer value -> kernelSignature += "int " + this.getVariableName(obj) + ",";
+                default -> {}
+            }
+        }
+        kernelSignature = kernelSignature.substring(0, kernelSignature.length() - 1) + ")";
+        return kernelSignature;
+    }
+
+    private void setKernelArguments(long kernel, Set<Object> arguments){
         int argumentNumber = 0;
-        for(var obj : arr){
+        for(var obj : arguments){
             setKernelArgument(kernel, obj, argumentNumber);
             argumentNumber++;
         }
-
-        objects = new LinkedHashSet<Object>();
-        objectVariables = new HashMap<>();
-
-        KernelBuilder.variableNameCounter = 0;
-        KernelBuilder.localVariableNumber = 0;
-
-        SVMBufferSupport.ExecuteKernel(kernel, info.GetCommandQueue(), this.length);
     }
 
-    // /**
-    //  *  ABC
-    //  *  @return abc
-    //  */
-    // public KernelBuilder line2(){
-    //     this.kernel += "B[i] += A[k] * cos(angle); printf(\"B[i]: %.6f\\n\", B[i]); printf(\"A[i]: %.6f\\n\", A[i]);}";
-    //     return this;
-    // }
+    private void setKernelArgument(long kernel, Object object, int argumentNumber){
+        switch(object){
+            case SVMBuffer buffer -> { SVMBufferSupport.SetKernelArgument(kernel, buffer.svmBuffer, argumentNumber);}
+            case Integer value -> { SVMBufferSupport.SetKernelArgument(kernel, value.intValue(), argumentNumber);}
+            case Float value -> { SVMBufferSupport.SetKernelArgument(kernel, value.floatValue(), argumentNumber);}
+            default -> System.out.println("Error");
+        }
+    }
 
-    // /**
-    //  *  ABC
-    //  *  @param v1 abc
-    //  *  @return abc
-    //  */
-    // public KernelBuilder MultiplyI(float v1){
-    //     this.kernel += "float f1 = i * " + v1 + ";";
-    //     return this;
-    // }
-
-    // /**
-    //  *  ABC
-    //  *  @return abc
-    //  */
-    // public KernelBuilder MultiplyT(){
-    //     this.kernel += "float f2 = t * f1;";
-    //     return this;
-    // }
-
-    // /**
-    //  *  ABC
-    //  *  @param v1 abc
-    //  *  @return abc
-    //  */
-    // public KernelBuilder Divide(float v1){
-    //     this.kernel += "float angle = f2 /" + v1 + ";";
-    //     return this;
-    // }
-
-    // /**
-    //  *  ABC
-    //  *  @return abc
-    //  */
-    // public KernelBuilder AddSum(){
-    //     this.kernel += "sum += A[t] * cos(angle);";
-    //     return this;
-    // }
-
-    // /**
-    //  *  ABC
-    //  *  @return abc
-    //  */
-    // public KernelBuilder Set(){
-    //     this.kernel += "B[i] = sum;";
-    //     return this;
-    // }
+    private void resetKernelBuilder(){
+        objectVariables = new LinkedHashMap<>();
+        KernelBuilder.variableNameCounter = 0;
+        KernelBuilder.localVariableNumber = 0;
+    }
 
     /**
-     *  ABC
-     *  @param offset abc
-     *  @param limit abc
-     *  @param step abc
-     *  @param kb1 abc
-     *  @return abc
+    *  Assigns builder to buffer
+    *  @param buffer to be set
+    *  @param builder right hand side of the addition assignment operator
+    *  @return new KernelStatement representing the assignment operator
+        // TODO change this
+    */
+    public KernelBuilder Assign(SVMBuffer buffer, KernelStatement builder){
+        var bufferVariable = getVariableName(buffer);
+        this.kernelString.append(bufferVariable + "[i] = " + builder.localName + ";");
+        return this;
+    }
+
+    /**
+    *  Adds and Assigns builder to buffer
+    *  @param buffer to be set
+    *  @param builder right hand side of the addition assignment operator
+    *  @return new KernelStatement representing the addition assignment operator
+        // TODO change this
+    */
+    public KernelBuilder AddAssign(SVMBuffer buffer, KernelStatement builder){
+        var bufferVariable = getVariableName(buffer);
+        this.kernelString.append(bufferVariable + "[i] += " + builder.localName + ";");
+        return this;
+    }
+
+    /**
+     *  Representation of a single statement in the kernel
      */
-    public KernelBuilder For(int offset, int limit, int step, KernelBuilder kb1){
-        var kb = new KernelBuilder("", kb1.objects, kb1.objectVariables);
-        if(this.program != 0){
-            return this;
+    public class KernelStatement {
+
+        private final String localName;
+
+        private StringBuilder kernelString;
+
+        private final Class<?> type;
+
+        private Class<?> getType(Class<?> a, Class<?> b){
+            if (a == Double.TYPE || b == Double.TYPE) {
+                return Double.TYPE;
+            } else if (a == Float.TYPE || b == Float.TYPE) {
+                return Float.TYPE;
+            } else if(a == Long.TYPE || b == Long.TYPE){
+                return Long.TYPE;
+            } else if(a == Integer.TYPE || b == Integer.TYPE){
+                return Integer.TYPE;
+            }
+            return Short.TYPE;
         }
-        kb.kernelBody += "for(int t = " + offset + "; t < " + limit + "; t +=" + step + "){" + kb1.kernelBody + "}";
-        return kb;
+
+        /**
+         *  KernelStatement constructor
+         *  @param type of the KernelStatement
+         *  @param kernelString string of the current kernel
+         *  @param rhs of the statement
+         */
+        public KernelStatement(Class<?> type, StringBuilder kernelString, String rhs){
+            this.type = type;
+            this.localName = getLocalVariableName();
+            this.kernelString = kernelString;
+            kernelString.append(type.toString() + " " + this.localName + " = " + rhs + ";");
+        }
+
+        private String getLocalVariableName(){
+            var name = "l" + KernelBuilder.localVariableNumber;
+            KernelBuilder.localVariableNumber++;
+            return name;
+        }
+
+        /**
+        *  Multiplies this with the buffer element
+        *  @param buffer containing the values
+        *  @return new KernelStatement representing the multiplication
+        */
+        public KernelStatement Mul(SVMBuffer buffer){
+            var bufferVariable = getVariableName(buffer);
+            var rhs = this.localName + " * " + bufferVariable + "[i]";
+            // TODO change Type
+            var resultType = getType(this.type, Float.TYPE);
+            return new KernelStatement(resultType, this.kernelString, rhs);
+        }
+
+        /**
+        *  Multiplies this with the buffer element
+        *  @param buffer containing the values
+        *  @param index accesing the buffer
+        *  @return new KernelStatement representing the multiplication
+        */
+        public KernelStatement Mul(SVMBuffer buffer, Integer index){
+            var bufferVariable = getVariableName(buffer);
+            var indexVariable = getVariableName(index);
+            var rhs = this.localName + " * " + bufferVariable + "["+ indexVariable + "]";
+            // TODO change Type
+            var resultType = getType(this.type, Float.TYPE);
+            return new KernelStatement(resultType, this.kernelString, rhs);
+        }
+
+        /**
+        *  Multiplies this with the buffer element
+        *  @param buffer containing the values
+        *  @param index accessing the buffer
+        *  @return new KernelStatement representing the multiplication
+        */
+        public KernelStatement Mul(SVMBuffer buffer, KernelIndex index){
+            var bufferVariable = getVariableName(buffer);
+            var rhs = this.localName + " * " + bufferVariable + "["+ index.getIndex() + "]";
+            // TODO change Type
+            var resultType = getType(this.type, Float.TYPE);
+            return new KernelStatement(resultType, this.kernelString, rhs);
+        }
+
+        /**
+        *  Multiplies this with the KernelIndex
+        *  @param value to be multiplied
+        *  @return new KernelStatement representing the multiplication
+        */
+        public KernelStatement Mul(KernelIndex value){
+            var resultType = getType(this.type, Integer.TYPE);
+            var rhs = this.localName + " * " + value.getIndex();
+            return new KernelStatement(resultType, this.kernelString, rhs);
+        }
+
+        /**
+        *  Multiplies this with the value
+        *  @param value to be multiplied
+        *  @return new KernelStatement representing the multiplication
+        */
+        public KernelStatement Mul(Integer value){
+            var intVariable = getVariableName(value);
+            var rhs = this.localName + " * " + intVariable;
+            var resultType = getType(this.type, Integer.TYPE);
+            return new KernelStatement(resultType, this.kernelString, rhs);
+        }
+
+        /**
+        *  Multiplies this with the value
+        *  @param value to be multiplied
+        *  @return new KernelStatement representing the multiplication
+        */
+        public KernelStatement Mul(Float value){
+            var floatVariable = getVariableName(value);
+            var rhs = this.localName + " * " + floatVariable;
+            var resultType = getType(this.type, Float.TYPE);
+            return new KernelStatement(resultType, this.kernelString, rhs);
+        }
+
+        /**
+        *  Multiplies this with the value
+        *  @param value to be multiplied
+        *  @return new KernelStatement representing the multiplication
+        */
+        public KernelStatement Mul(KernelStatement value){
+            var rhs = this.localName + " * " + value.localName;
+            var resultType = getType(this.type, value.type);
+            return new KernelStatement(resultType, this.kernelString, rhs);
+        }
+
+        /**
+        *  Divides this with the value
+        *  @param value to be divided
+        *  @return new KernelStatement representing the division
+        */
+        public KernelStatement Div(Integer value){
+            var intVariable = getVariableName(value);
+            var rhs = this.localName + " / " + intVariable;
+            var resultType = getType(this.type, Integer.TYPE);
+            return new KernelStatement(resultType, this.kernelString, rhs);
+        }
+
+        /**
+        *  Divides this with the value
+        *  @param value to be divided
+        *  @return new KernelStatement representing the division
+        */
+        public KernelStatement Div(Float value){
+            var floatVariable = getVariableName(value);
+            var rhs = this.localName + " / " + floatVariable;
+            var resultType = getType(this.type, Float.TYPE);
+            return new KernelStatement(resultType, this.kernelString, rhs);
+        }
+
+        /**
+        *  Divides this with the value
+        *  @param value to be divided
+        *  @return new KernelStatement representing the division
+        */
+        public KernelStatement Div(KernelStatement value){
+            var rhs = this.localName + " / " + value.localName;
+            var resultType = getType(this.type, value.type);
+            return new KernelStatement(resultType, this.kernelString, rhs);
+        }
+
+        /**
+        *  Divides this with the value
+        *  @param value to be divided
+        *  @return new KernelStatement representing the division
+        */
+        public KernelStatement Div(SVMBuffer value){
+            var bufferVariable = getVariableName(value);
+            var rhs = this.localName + " / " + bufferVariable + "[i]";
+            // TODO change type
+            var resultType = getType(this.type, Float.TYPE);
+            return new KernelStatement(resultType, this.kernelString, rhs);
+        }
+
+        /**
+        *  Adds value to this
+        *  @param value to be added
+        *  @return new KernelStatement representing the addition
+        */
+        public KernelStatement Add(Float value){
+            var floatVariable = getVariableName(value);
+            var rhs = this.localName + " + " + floatVariable;
+            var resultType = getType(this.type, Float.TYPE);
+            return new KernelStatement(resultType, this.kernelString, rhs);
+        }
+
+        /**
+        *  Adds value to this
+        *  @param value to be added
+        *  @return new KernelStatement representing the addition
+        */
+        public KernelStatement Add(Integer value){
+            var floatVariable = getVariableName(value);
+            var rhs = this.localName + " + " + floatVariable;
+            var resultType = getType(this.type, Integer.TYPE);
+            return new KernelStatement(resultType, this.kernelString, rhs);
+        }
+
+        /**
+        *  Adds value to this
+        *  @param value to be added
+        *  @return new KernelStatement representing the addition
+        */
+        public KernelStatement Add(SVMBuffer value){
+            var bufferVariable = getVariableName(value);
+            var rhs = this.localName + " + " + bufferVariable + "[i]";
+            // TODO change type
+            var resultType = getType(this.type, Float.TYPE);
+            return new KernelStatement(resultType, this.kernelString, rhs);
+        }
+
+        /**
+        *  Adds value to this
+        *  @param value to be added
+        *  @return new KernelStatement representing the addition
+        */
+        public KernelStatement Add(KernelStatement value){
+            var rhs = this.localName + " + " + value.localName;
+            var resultType = getType(this.type, value.type);
+            return new KernelStatement(resultType, this.kernelString, rhs);
+        }
+
+        /**
+        *  Subtracts value from this
+        *  @param value to be subtracted
+        *  @return new KernelStatement representing the subtraction
+        */
+        public KernelStatement Sub(Float value){
+            var floatVariable = getVariableName(value);
+            var rhs = this.localName + " - " + floatVariable;
+            var resultType = getType(this.type, Float.TYPE);
+            return new KernelStatement(resultType, this.kernelString, rhs);
+        }
+
+        /**
+        *  Subtracts value from this
+        *  @param value to be subtracted
+        *  @return new KernelStatement representing the subtraction
+        */
+        public KernelStatement Sub(Integer value){
+            var floatVariable = getVariableName(value);
+            var rhs = this.localName + " - " + floatVariable;
+            var resultType = getType(this.type, Integer.TYPE);
+            return new KernelStatement(resultType, this.kernelString, rhs);
+        }
+
+        /**
+        *  Subtracts value from this
+        *  @param value to be subtracted
+        *  @return new KernelStatement representing the subtraction
+        */
+        public KernelStatement Sub(SVMBuffer value){
+            var bufferVariable = getVariableName(value);
+            var rhs = this.localName + " - " + bufferVariable + "[i]";
+            // TODO change type
+            var resultType = getType(this.type, Float.TYPE);
+            return new KernelStatement(resultType, this.kernelString, rhs);
+        }
+
+        /**
+        *  Subtracts value from this
+        *  @param value to be subtracted
+        *  @return new KernelStatement representing the subtraction
+        */
+        public KernelStatement Sub(KernelStatement value){
+            var rhs = this.localName + " - " + value.localName;
+            var resultType = getType(this.type, value.type);
+            return new KernelStatement(resultType, this.kernelString, rhs);
+        }
+
+
+        /**
+        *  Calculates the Cosinus of this
+        *  @return new KernelStatement representing the result of the cosinus
+        */
+        public KernelStatement Cos(){
+            var rhs = "cos(" + this.localName + ")";
+            return new KernelStatement(Float.TYPE, this.kernelString, rhs);
+        }
+
+        /**
+        *  Calculates the logarithm of this
+        *  @return new KernelStatement representing the result of the logarithm
+        */
+        public KernelStatement Log(){
+            var rhs = "log(" + this.localName + ")";
+            return new KernelStatement(Float.TYPE, this.kernelString, rhs);
+        }
+
+        /**
+        *  Calculates the exponential function of this
+        *  @return new KernelStatement representing the result of the exponential function
+        */
+        public KernelStatement Exp(){
+            var rhs = "exp(" + this.localName + ")";
+            return new KernelStatement(Float.TYPE, this.kernelString, rhs);
+        }
+
+        /**
+        *  Calculates the square-root of this
+        *  @return new KernelStatement representing the result of the square-root
+        */
+        public KernelStatement Sqrt(){
+            var rhs = "sqrt(" + this.localName + ")";
+            return new KernelStatement(Float.TYPE, this.kernelString, rhs);
+        }
+
+        /**
+        *  Calculates the absolut value of this
+        *  @return new KernelStatement representing the absolut value
+        */
+        public KernelStatement Abs(){
+            var rhs = "fabs(" + this.localName + ")";
+            return new KernelStatement(Float.TYPE, this.kernelString, rhs);
+        }
+
+        /**
+        *  Compares this with the value
+        *  @param value to be compared against
+        *  @return new KernelStatement representing comparison
+        */
+        public KernelStatement CompareGT(float value){
+            var floatVariable = getVariableName(value);
+            var rhs = "0.0f; if(" + this.localName + " > " + floatVariable + "){";
+            var statement = new KernelStatement(Float.TYPE, this.kernelString, rhs);
+            statement.kernelString.append(statement.localName + "= 1.0f;}");
+            return statement;
+        }
+
+        /**
+         *  Returns the linear blend of x (this) and y and a implemented as: x + (y - x) * a
+         *  @param value y
+         *  @param mask a
+         *  @return new KernelStatement representing the opencl mix function
+         */
+        public KernelStatement Blend(KernelStatement value, KernelStatement mask){
+            var rhs = "mix(" + this.localName + ", " + value.localName + ", " + mask.localName + ")";
+            var resultType = getType(this.type, value.type);
+            return new KernelStatement(resultType, this.kernelString, rhs);
+        }
+
+        @Override
+        public String toString(){
+            return this.localName + ": " + this.kernelString.toString();
+        }
     }
 }
