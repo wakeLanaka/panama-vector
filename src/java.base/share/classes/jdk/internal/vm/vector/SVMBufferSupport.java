@@ -47,9 +47,7 @@ public class SVMBufferSupport {
 
     public static native void MatrixFmaSVMBuffer(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, long jBuffer3, int K, int N, int k, int length);
 
-    public static native float ReduceAdd(long jContext, long jProgram, long jCommandQueue, long jBuffer, int length);
-
-    public static native void ReduceAdd(long jProgram, long jCommandQueue, long b1, long b2, int size, int length);
+    public static native float SumReduce(long jContext, long jProgram, long jCommandQueue, long jBuffer, int length);
 
     public static native void Subtract(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, long jBuffer3, int length);
 

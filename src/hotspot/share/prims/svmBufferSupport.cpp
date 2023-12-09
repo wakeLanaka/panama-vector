@@ -223,29 +223,43 @@ JVM_ENTRY(void, SVMBufferSupport_fmaSVMBuffer(JNIEnv *env, jclass vsclazz, jlong
   clReleaseKernel(kernel);
 } JVM_END
 
-JVM_ENTRY(jfloat, SVMBufferSupport_reduceAdd(JNIEnv *env, jclass vsclazz, jlong jContext, jlong jProgram, jlong jCommandQueue, jlong jBuffer, jint length)) {
+JVM_ENTRY(jfloat, SVMBufferSupport_sumReduce(JNIEnv *env, jclass vsclazz, jlong jContext, jlong jProgram, jlong jCommandQueue, jlong jBuffer, jint length)) {
   cl_context clContext = (cl_context)jContext;
   cl_program clProgram = (cl_program)jProgram;
   cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
   float* clBuffer = (float *)jBuffer;
   int clLength = (int)length;
 
-  cl_kernel kernel = clCreateKernel(clProgram, "vector_reduce", &svmError);
+  size_t localSize = 256;
+  size_t workGroups = std::ceil(clLength / (float)localSize);
+  float* sums = (float * )clSVMAlloc(clContext, CL_MEM_READ_WRITE, sizeof(float) * workGroups, 0);
+
+  cl_kernel kernel = clCreateKernel(clProgram, "sumreduce", &svmError);
   handleError(svmError, "clCreateKernel");
 
   svmError = clSetKernelArgSVMPointer(kernel, 0, clBuffer);
   handleError(svmError, "clSetKernelArg");
 
+  svmError = clSetKernelArgSVMPointer(kernel, 1, sums);
+  handleError(svmError, "clSetKernelArg");
+
   cl_mem c_mem_obj = clCreateBuffer(clContext, CL_MEM_READ_WRITE, sizeof(float), NULL, &svmError);
   handleError(svmError, "createBuffer");
 
-  svmError = clSetKernelArg(kernel, 1, sizeof(cl_mem), &c_mem_obj);
+  svmError = clSetKernelArg(kernel, 2, sizeof(cl_mem), &c_mem_obj);
   handleError(svmError, "setArgs");
 
+  svmError = clSetKernelArg(kernel, 3, sizeof(int), &clLength);
+  handleError(svmError, "clSetKernelArg");
+
+  svmError = clSetKernelArg(kernel, 4, sizeof(float) * localSize, NULL);
+  handleError(svmError, "clSetKernelArg");
+
+  size_t local_item_size[] = {localSize};
   size_t global_item_size[] = {(size_t)clLength};
 
   svmError = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
-                         global_item_size, NULL, 0, NULL, NULL);
+                         global_item_size, local_item_size, 0, NULL, NULL);
   handleError(svmError, "clEnqueueNDRangeKernel");
 
   float sum = 0;
@@ -253,6 +267,7 @@ JVM_ENTRY(jfloat, SVMBufferSupport_reduceAdd(JNIEnv *env, jclass vsclazz, jlong 
 
   clReleaseKernel(kernel);
   clReleaseMemObject(c_mem_obj);
+  clSVMFree(clContext, sums);
   return sum;
 } JVM_END
 
@@ -769,35 +784,6 @@ JVM_ENTRY(void, SVMBufferSupport_sin(JNIEnv *env, jclass vsclazz, jlong jProgram
   clReleaseKernel(kernel);
 } JVM_END
 
-JVM_ENTRY(void, SVMBufferSupport_reducen(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jCommandQueue, jlong b1, jlong b2, jint size, jint length)) {
-  cl_program clProgram = (cl_program)jProgram;
-  cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
-  float * clB1 = (float *)b1;
-  float * clB2 = (float *)b2;
-  int clSize = (int)size;
-  int clLength = (int)length;
-
-  cl_kernel kernel = clCreateKernel(clProgram, "reducen", &svmError);
-  handleError(svmError, "clCreateKernel");
-
-  svmError = clSetKernelArgSVMPointer(kernel, 0, clB1);
-  handleError(svmError, "clSetKernelArg");
-
-  svmError = clSetKernelArgSVMPointer(kernel, 1, clB2);
-  handleError(svmError, "clSetKernelArg");
-
-  svmError = clSetKernelArg(kernel, 2, sizeof(int), &clSize);
-  handleError(svmError, "clSetKernelArg");
-
-  size_t global_item_size[] = {(size_t)clLength};
-
-  svmError = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
-                         global_item_size, NULL, 0, NULL, NULL);
-  handleError(svmError, "clEnqueueNDRangeKernel");
-
-  clReleaseKernel(kernel);
-} JVM_END
-
 JVM_ENTRY(void, SVMBufferSupport_dft(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jCommandQueue, jlong b1, jlong b2, jint length)) {
   cl_program clProgram = (cl_program)jProgram;
   cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
@@ -963,7 +949,7 @@ static JNINativeMethod jdk_internal_vm_vector_SVMBufferSupport_methods[] = {
     {CC "ReleaseSVMBuffer",   CC "(JJJ)V", FN_PTR(SVMBufferSupport_releaseSVMBuffer)},
     {CC "MatrixFmaSVMBuffer",   CC "(JJJJJIIII)V", FN_PTR(SVMBufferSupport_matrixFmaSVMBuffer)},
     {CC "FmaSVMBuffer",   CC "(JJJJJJI)V", FN_PTR(SVMBufferSupport_fmaSVMBuffer)},
-    {CC "ReduceAdd",   CC "(JJJJI)F", FN_PTR(SVMBufferSupport_reduceAdd)},
+    {CC "SumReduce",   CC "(JJJJI)F", FN_PTR(SVMBufferSupport_sumReduce)},
     {CC "SubtractionMinuend",   CC "(JJJJFI)V", FN_PTR(SVMBufferSupport_subtractionMinuend)},
     {CC "Subtract",   CC "(JJJJJI)V", FN_PTR(SVMBufferSupport_subtract)},
     {CC "Multiply",   CC "(JJJJFI)V", FN_PTR(SVMBufferSupport_multiply)},
@@ -979,7 +965,6 @@ static JNINativeMethod jdk_internal_vm_vector_SVMBufferSupport_methods[] = {
     {CC "BlackScholes",   CC "(JJFFJJJJJI)V", FN_PTR(SVMBufferSupport_blackscholes)},
     {CC "Cos",   CC "(JJJJI)V", FN_PTR(SVMBufferSupport_cos)},
     {CC "Sin",   CC "(JJJJI)V", FN_PTR(SVMBufferSupport_sin)},
-    {CC "ReduceAdd",   CC "(JJJJII)V", FN_PTR(SVMBufferSupport_reducen)},
     {CC "MultiplyInPlaceRepeat",   CC "(JJJJII)V", FN_PTR(SVMBufferSupport_multiplyRepeat)},
     {CC "DFT",   CC "(JJJJI)V", FN_PTR(SVMBufferSupport_dft)},
     {CC "ForSum",   CC "(JJJJFI)V", FN_PTR(SVMBufferSupport_forSum)},
