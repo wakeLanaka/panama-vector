@@ -492,6 +492,15 @@ public class KernelBuilder {
         }
 
         /**
+        *  Calculates the Sinus of this
+        *  @return new KernelStatement representing the result of the sinus
+        */
+        public KernelStatement Sin(){
+            var rhs = "sin(" + this.localName + ")";
+            return new KernelStatement(Float.TYPE, this.kernelString, rhs);
+        }
+
+        /**
         *  Calculates the logarithm of this
         *  @return new KernelStatement representing the result of the logarithm
         */

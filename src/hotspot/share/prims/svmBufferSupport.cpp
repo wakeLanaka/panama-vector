@@ -784,11 +784,13 @@ JVM_ENTRY(void, SVMBufferSupport_sin(JNIEnv *env, jclass vsclazz, jlong jProgram
   clReleaseKernel(kernel);
 } JVM_END
 
-JVM_ENTRY(void, SVMBufferSupport_dft(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jCommandQueue, jlong b1, jlong b2, jint length)) {
+JVM_ENTRY(void, SVMBufferSupport_dft(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jCommandQueue, jlong b1, jlong b2, jlong b3, jlong b4, jint length)) {
   cl_program clProgram = (cl_program)jProgram;
   cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
   float * clB1 = (float *)b1;
   float * clB2 = (float *)b2;
+  float * clB3 = (float *)b3;
+  float * clB4 = (float *)b4;
   int clLength = (int)length;
 
   cl_kernel kernel = clCreateKernel(clProgram, "dft", &svmError);
@@ -800,7 +802,13 @@ JVM_ENTRY(void, SVMBufferSupport_dft(JNIEnv *env, jclass vsclazz, jlong jProgram
   svmError = clSetKernelArgSVMPointer(kernel, 1, clB2);
   handleError(svmError, "clSetKernelArg");
 
-  svmError = clSetKernelArg(kernel, 2, sizeof(int), &clLength);
+  svmError = clSetKernelArgSVMPointer(kernel, 2, clB3);
+  handleError(svmError, "clSetKernelArg");
+
+  svmError = clSetKernelArgSVMPointer(kernel, 3, clB4);
+  handleError(svmError, "clSetKernelArg");
+
+  svmError = clSetKernelArg(kernel, 4, sizeof(int), &clLength);
   handleError(svmError, "clSetKernelArg");
 
   size_t global_item_size[] = {(size_t)clLength};
@@ -966,7 +974,7 @@ static JNINativeMethod jdk_internal_vm_vector_SVMBufferSupport_methods[] = {
     {CC "Cos",   CC "(JJJJI)V", FN_PTR(SVMBufferSupport_cos)},
     {CC "Sin",   CC "(JJJJI)V", FN_PTR(SVMBufferSupport_sin)},
     {CC "MultiplyInPlaceRepeat",   CC "(JJJJII)V", FN_PTR(SVMBufferSupport_multiplyRepeat)},
-    {CC "DFT",   CC "(JJJJI)V", FN_PTR(SVMBufferSupport_dft)},
+    {CC "DFT",   CC "(JJJJJJI)V", FN_PTR(SVMBufferSupport_dft)},
     {CC "ForSum",   CC "(JJJJFI)V", FN_PTR(SVMBufferSupport_forSum)},
     {CC "ExecuteKernel",   CC "(JJI)V", FN_PTR(ExecBufferSupport_executeKernel)},
     {CC "CreateKernel",   CC "(J)J", FN_PTR(ExecBufferSupport_createExecKernel)},

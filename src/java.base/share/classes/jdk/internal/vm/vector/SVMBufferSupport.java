@@ -83,7 +83,7 @@ public class SVMBufferSupport {
 
     public static native void MultiplyInPlaceRepeat(long jProgram, long jCommandQueue, long b1, long b2, int size, int length);
 
-    public static native void DFT(long jProgram, long jCommandQueue, long b1, long b2, int size);
+    public static native void DFT(long jProgram, long jCommandQueue, long b1, long b2, long b3, long b4, int size);
 
     public static native void ForSum(long jProgram, long jCommandQueue, long b1, long b2, float v1, int length);
 
