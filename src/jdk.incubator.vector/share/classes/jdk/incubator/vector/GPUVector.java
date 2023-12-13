@@ -8,7 +8,7 @@ import java.util.function.*;
 import static jdk.internal.vm.vector.VectorSupport.*;
 
 import jdk.incubator.vector.GPUInformation;
-import jdk.incubator.vector.SVMBuffer.OpenCLInformation;
+import jdk.incubator.vector.OpenCLInformation;
 
 /**
     abcd

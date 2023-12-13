@@ -1,7 +1,7 @@
 package jdk.incubator.vector;
 
 import jdk.incubator.vector.GPUInformation;
-import jdk.incubator.vector.SVMBuffer.OpenCLInformation;
+import jdk.incubator.vector.OpenCLInformation;
 
 /**
  *  Class to execute for-loops on the GPU using KernelBuilder

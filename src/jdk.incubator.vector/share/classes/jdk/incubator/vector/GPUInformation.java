@@ -37,4 +37,10 @@ public interface GPUInformation {
      *  @return the current program
      */
     public long GetProgram();
+
+    /**
+     *  Get the maximal work group size
+     *  @return the maximal work group size for this device
+     */
+    public int GetMaxWorkGroupSize();
 }

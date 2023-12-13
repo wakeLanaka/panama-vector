@@ -1,7 +1,8 @@
+#include <iostream>
+#include "precompiled.hpp"
 #include "openclHelper.hpp"
 #define CL_TARGET_OPENCL_VERSION 300
 #include "CL/cl.h"
-#include <iostream>
 
 const char *getOpenCLError(cl_int error) {
   switch(error){

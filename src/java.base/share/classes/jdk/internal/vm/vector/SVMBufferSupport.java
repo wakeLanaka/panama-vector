@@ -23,7 +23,9 @@ public class SVMBufferSupport {
 
     public static native void ReleaseDevice(long jDevice);
 
-    public static native void WriteSVMBuffer(long jCommandQueue, long jBuffer, int element, int length, int value);
+    public static native int GetMaxWorkGroupSize(long jDevice);
+
+    public static native long CreateReadWriteFloatSVMBuffer(long jContext, int length);
 
     public static native long CopyFromArray(long jContext, long jCommandQueue, int[] jArray);
 
@@ -31,15 +33,9 @@ public class SVMBufferSupport {
 
     public static native void CopyToArray(long jContext, long jCommandQueue, long jBuffer, int[] jArray);
 
-    public static native void CopyToFloatArray(long jContext, long jCommandQueue, long jBuffer, float[] jArray);
+    public static native void CopyToArray(long jContext, long jCommandQueue, long jBuffer, float[] jArray);
 
     public static native void ReleaseSVMBuffer(long jContext, long jCommandQueue, long jBuffer);
-
-    public static native long CreateReadSVMBuffer(long jContext, int length);
-
-    public static native long CreateWriteSVMBuffer(long jContext, int length);
-
-    public static native float ReadSVMBuffer(long jCommandQueue, long jBuffer, int element, int length);
 
     public static native void AddSVMBuffer(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, long jBuffer3, int length);
 
@@ -47,13 +43,11 @@ public class SVMBufferSupport {
 
     public static native void MatrixFmaSVMBuffer(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, long jBuffer3, int K, int N, int k, int length);
 
-    public static native float SumReduce(long jContext, long jProgram, long jCommandQueue, long jBuffer, int length);
+    public static native float SumReduce(long jContext, long jProgram, long jCommandQueue, long jBuffer, int maxWorkGroupSize, int length);
 
     public static native void Subtract(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, long jBuffer3, int length);
 
-    public static native void SubtractionMinuend(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, float jMinuend, int length);
-
-    public static native void SubtractionSubtrahend(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, float jSubtrahend, int length);
+    public static native void Subtract(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, float jMinuend, int length);
 
     public static native void Multiply(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, float jFactor, int length);
 

@@ -1,4 +1,5 @@
 #include "prims/gpuSupport.hpp"
+#include "precompiled.hpp"
 #include "runtime/interfaceSupport.inline.hpp"
 
 #define CL_TARGET_OPENCL_VERSION 300
@@ -8,87 +9,94 @@
 #include <iostream>
 #include<unistd.h>
 
-cl_int gpuError = 0;
-
-JVM_ENTRY(long, GPUSupport_createContext(JNIEnv *env, jclass vsclazz, jlong jDevice)) {
+JVM_ENTRY(jlong, GPUSupport_createContext(JNIEnv *env, jclass vsclazz, jlong jDevice)) {
+  cl_int error = 0;
   cl_device_id clDevice = (cl_device_id) jDevice;
-  cl_context clContext = clCreateContext(0, 1, &clDevice, NULL, NULL, &gpuError);
-  handleError(gpuError, "clCreateContext");
+  cl_context clContext = clCreateContext(0, 1, &clDevice, NULL, NULL, &error);
+  handleError(error, "clCreateContext");
 
   return (jlong) clContext;
 } JVM_END
 
 JVM_ENTRY(void, GPUSupport_releaseContext(JNIEnv *env, jclass vsclazz, jlong jContext)) {
+  cl_int error = 0;
   cl_context clContext = (cl_context) jContext;
   if (clContext) {
-    gpuError = clReleaseContext(clContext);
-    handleError(gpuError, "ReleaseContext");
+    error = clReleaseContext(clContext);
+    handleError(error, "ReleaseContext");
   }
 } JVM_END
 
 JVM_ENTRY(jlong, GPUSupport_createProgram(JNIEnv *env, jclass vsclazz, jlong jContext, jstring jKernelString)) {
+  cl_int error = 0;
   cl_context clContext = (cl_context)jContext;
   const char * kernel = env->GetStringUTFChars(jKernelString, NULL);
   const char * clKernelString[] = {kernel};
   const size_t clKernelLength = (size_t)env->GetStringLength(jKernelString);
 
-  cl_program clProgram = clCreateProgramWithSource(clContext, 1, clKernelString, &clKernelLength, &gpuError);
-  handleError(gpuError, "clCreateProgramWithSource");
+  cl_program clProgram = clCreateProgramWithSource(clContext, 1, clKernelString, &clKernelLength, &error);
+  handleError(error, "clCreateProgramWithSource");
 
-  gpuError = clBuildProgram(clProgram, 0, NULL, "-cl-std=CL2.0", NULL, NULL);
-  handleError(gpuError, "clBuildProgram");
+  error = clBuildProgram(clProgram, 0, NULL, "-cl-std=CL2.0", NULL, NULL);
+  handleError(error, "clBuildProgram");
   env->ReleaseStringUTFChars(jKernelString, kernel);
 
   return (jlong)clProgram;
 } JVM_END
 
 JVM_ENTRY(void, GPUSupport_releaseProgram(JNIEnv *env, jclass vsclazz, jlong jProgram)) {
+  cl_int error = 0;
   cl_program clProgram = (cl_program) jProgram;
   if (clProgram) {
-    gpuError = clReleaseProgram(clProgram);
-    handleError(gpuError, "ReleaseProgram");
+    error = clReleaseProgram(clProgram);
+    handleError(error, "ReleaseProgram");
   }
 } JVM_END
 
 JVM_ENTRY(jlong, GPUSupport_createCommandQueue(JNIEnv *env, jclass vsclazz, jlong jContext, jlong jDevice)) {
+  cl_int error = 0;
   cl_context clContext = (cl_context)jContext;
   cl_device_id clDevice = (cl_device_id)jDevice;
   cl_command_queue_properties properties[3] = {CL_QUEUE_PROPERTIES, CL_QUEUE_PROFILING_ENABLE, 0};
-  cl_command_queue clCommandQueue = clCreateCommandQueueWithProperties(clContext, clDevice, properties, &gpuError);
-  handleError(gpuError, "createCommandQueue");
+  cl_command_queue clCommandQueue = clCreateCommandQueueWithProperties(clContext, clDevice, properties, &error);
+  handleError(error, "createCommandQueue");
   return (jlong)clCommandQueue;
 } JVM_END
 
 JVM_ENTRY(void, GPUSupport_releaseCommandQueue(JNIEnv *env, jclass vsclazz, jlong jCommandQueue)) {
+  cl_int error = 0;
   cl_command_queue clCommandQueue = (cl_command_queue) jCommandQueue;
   if (clCommandQueue) {
-    gpuError = clReleaseCommandQueue(clCommandQueue);
-    handleError(gpuError, "clReleaseCommandQueue");
+    error = clReleaseCommandQueue(clCommandQueue);
+    handleError(error, "clReleaseCommandQueue");
   }
 } JVM_END
 
 JVM_ENTRY(jlong, GPUSupport_createDevice(JNIEnv *env, jclass vsclazz)) {
+  cl_int error = 0;
   cl_platform_id clPlatform = NULL;
   cl_device_id clDevice = NULL;
 
-  gpuError = clGetPlatformIDs(1, &clPlatform, NULL);
-  handleError(gpuError, "clGetPlatformIDs");
+  error = clGetPlatformIDs(1, &clPlatform, NULL);
+  handleError(error, "clGetPlatformIDs");
 
-  gpuError = clGetDeviceIDs(clPlatform, CL_DEVICE_TYPE_GPU, 1, &clDevice, NULL);
-  handleError(gpuError, "clGetDeviceIDs");
+  error = clGetDeviceIDs(clPlatform, CL_DEVICE_TYPE_GPU, 1, &clDevice, NULL);
+  handleError(error, "clGetDeviceIDs");
 
   return (jlong)clDevice;
 } JVM_END
 
 JVM_ENTRY(void, GPUSupport_releaseDevice(JNIEnv *env, jclass vsclazz, jlong jDevice)) {
+  cl_int error = 0;
   cl_device_id clDevice = (cl_device_id)jDevice;
   if (clDevice) {
-    gpuError = clReleaseDevice(clDevice);
-    handleError(gpuError, "clReleaseDevice");
+    error = clReleaseDevice(clDevice);
+    handleError(error, "clReleaseDevice");
   }
 } JVM_END
 
 JVM_ENTRY(jfloatArray, GPUSupport_add(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jContext, jlong jCommandQueue, jfloatArray jArray1, jfloatArray jArray2, jint length)) {
+  cl_int error = 0;
   cl_program clProgram = (cl_program)jProgram;
   cl_context clContext = (cl_context)jContext;
   cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
@@ -96,7 +104,6 @@ JVM_ENTRY(jfloatArray, GPUSupport_add(JNIEnv *env, jclass vsclazz, jlong jProgra
   float * cArray2 = env->GetFloatArrayElements(jArray2, 0);
   int clLength = (int)length;
 
-  int error = 0;
   cl_mem a_mem_obj = clCreateBuffer(clContext, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR,
                                     clLength * sizeof(float), cArray1, &error);
   handleError(error, "createBuffer");
@@ -142,8 +149,7 @@ JVM_ENTRY(jfloatArray, GPUSupport_add(JNIEnv *env, jclass vsclazz, jlong jProgra
 } JVM_END
 
 JVM_ENTRY(void, GPUSupport_gpuAdditionHostPtr(JNIEnv *env, jclass vsclazz, jintArray a, jintArray b, jintArray c)) {
-  std::cout << "a" << std::endl;
-  int error = 0;
+  cl_int error = 0;
   jsize length = env->GetArrayLength(a);
   const char * kernel_string[] = {"__kernel void vector_add(__global const int * A, __global const int * B, __global int * C, int N) {int i = get_global_id(0);C[i] = A[i] + B[i];}"};
 
@@ -232,6 +238,7 @@ JVM_ENTRY(void, GPUSupport_gpuAdditionHostPtr(JNIEnv *env, jclass vsclazz, jintA
 } JVM_END
 
 JVM_ENTRY(void, GPUSupport_subtract(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jContext, jlong jCommandQueue, jfloatArray jArray1, jfloatArray jArray2, jfloatArray jArray3, jint length)) {
+  cl_int error = 0;
   cl_program clProgram = (cl_program)jProgram;
   cl_context clContext = (cl_context)jContext;
   cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
@@ -240,30 +247,30 @@ JVM_ENTRY(void, GPUSupport_subtract(JNIEnv *env, jclass vsclazz, jlong jProgram,
   float * cArray3 = env->GetFloatArrayElements(jArray3, 0);
   int clLength = (int)length;
 
-  cl_mem clBuffer1 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray1, &gpuError);
-  handleError(gpuError, "clCreateBuffer");
-  cl_mem clBuffer2 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray2, &gpuError);
-  handleError(gpuError, "clCreateBuffer");
-  cl_mem clBuffer3 = clCreateBuffer(clContext,CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray3, &gpuError);
-  handleError(gpuError, "clCreateBuffer");
+  cl_mem clBuffer1 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray1, &error);
+  handleError(error, "clCreateBuffer");
+  cl_mem clBuffer2 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray2, &error);
+  handleError(error, "clCreateBuffer");
+  cl_mem clBuffer3 = clCreateBuffer(clContext,CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray3, &error);
+  handleError(error, "clCreateBuffer");
 
   cl_kernel kernel = clCreateKernel(clProgram, "subtract", NULL);
 
-  gpuError = clSetKernelArg(kernel, 0, sizeof(cl_mem), &clBuffer1);
-  handleError(gpuError, "clSetKernelArg");
-  gpuError = clSetKernelArg(kernel, 1, sizeof(cl_mem), &clBuffer2);
-  handleError(gpuError, "clSetKernelArg");
-  gpuError = clSetKernelArg(kernel, 2, sizeof(cl_mem), &clBuffer3);
-  handleError(gpuError, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 0, sizeof(cl_mem), &clBuffer1);
+  handleError(error, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 1, sizeof(cl_mem), &clBuffer2);
+  handleError(error, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 2, sizeof(cl_mem), &clBuffer3);
+  handleError(error, "clSetKernelArg");
 
   size_t global_item_size[] = {(size_t)clLength};
 
-  gpuError = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
+  error = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
                          global_item_size, NULL, 0, NULL, NULL);
-  handleError(gpuError, "clEnqueueNDRangeKernel");
+  handleError(error, "clEnqueueNDRangeKernel");
 
-  gpuError = clFinish(clCommandQueue);
-  handleError(gpuError, "clFinish");
+  error = clFinish(clCommandQueue);
+  handleError(error, "clFinish");
   clReleaseKernel(kernel);
   env->ReleaseFloatArrayElements(jArray1, cArray1, 0);
   env->ReleaseFloatArrayElements(jArray2, cArray2, 0);
@@ -282,37 +289,37 @@ JVM_ENTRY(void, GPUSupport_subtract(JNIEnv *env, jclass vsclazz, jlong jProgram,
 //   int clk = (int)k;
 //   int clLength = (int)length;
 
-//   cl_mem clBuffer1 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray1, &gpuError);
-//   handleError(gpuError, "clCreateBuffer");
-//   cl_mem clBuffer2 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray2, &gpuError);
-//   handleError(gpuError, "clCreateBuffer");
-//   cl_mem clBuffer3 = clCreateBuffer(clContext,CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray3, &gpuError);
-//   handleError(gpuError, "clCreateBuffer");
+//   cl_mem clBuffer1 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray1, &error);
+//   handleError(error, "clCreateBuffer");
+//   cl_mem clBuffer2 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray2, &error);
+//   handleError(error, "clCreateBuffer");
+//   cl_mem clBuffer3 = clCreateBuffer(clContext,CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray3, &error);
+//   handleError(error, "clCreateBuffer");
 
-//   cl_kernel kernel = clCreateKernel(clProgram, "matrix_fma", &gpuError);
-//   handleError(gpuError, "clCreateKernel");
+//   cl_kernel kernel = clCreateKernel(clProgram, "matrix_fma", &error);
+//   handleError(error, "clCreateKernel");
 
-//   gpuError = clSetKernelArg(kernel, 0, sizeof(cl_mem), &clBuffer1);
-//   handleError(gpuError, "clSetKernelArg");
-//   gpuError = clSetKernelArg(kernel, 1, sizeof(cl_mem), &clBuffer2);
-//   handleError(gpuError, "clSetKernelArg");
-//   gpuError = clSetKernelArg(kernel, 2, sizeof(cl_mem), &clBuffer3);
-//   handleError(gpuError, "clSetKernelArg");
+//   error = clSetKernelArg(kernel, 0, sizeof(cl_mem), &clBuffer1);
+//   handleError(error, "clSetKernelArg");
+//   error = clSetKernelArg(kernel, 1, sizeof(cl_mem), &clBuffer2);
+//   handleError(error, "clSetKernelArg");
+//   error = clSetKernelArg(kernel, 2, sizeof(cl_mem), &clBuffer3);
+//   handleError(error, "clSetKernelArg");
 
-//   gpuError = clSetKernelArg(kernel, 3, sizeof(int), &clK);
-//   handleError(gpuError, "clSetKernelArg");
+//   error = clSetKernelArg(kernel, 3, sizeof(int), &clK);
+//   handleError(error, "clSetKernelArg");
 
-//   gpuError = clSetKernelArg(kernel, 4, sizeof(int), &clN);
-//   handleError(gpuError, "clSetKernelArg");
+//   error = clSetKernelArg(kernel, 4, sizeof(int), &clN);
+//   handleError(error, "clSetKernelArg");
 
-//   gpuError = clSetKernelArg(kernel, 5, sizeof(int), &clk);
-//   handleError(gpuError, "clSetKernelArg");
+//   error = clSetKernelArg(kernel, 5, sizeof(int), &clk);
+//   handleError(error, "clSetKernelArg");
 
 //   size_t global_item_size[] = {(size_t)clLength};
 
-//   gpuError = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
+//   error = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
 //                          global_item_size, NULL, 0, NULL, NULL);
-//   handleError(gpuError, "clEnqueueNDRangeKernel");
+//   handleError(error, "clEnqueueNDRangeKernel");
 
 //   clReleaseKernel(kernel);
 // } JVM_END
@@ -330,70 +337,71 @@ JVM_ENTRY(void, GPUSupport_subtract(JNIEnv *env, jclass vsclazz, jlong jProgram,
 //   int clk = (int)k;
 //   int clLength = (int)length;
 
-//   cl_mem clBuffer1 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray1, &gpuError);
-//   handleError(gpuError, "clCreateBuffer");
-//   cl_mem clBuffer2 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray2, &gpuError);
-//   handleError(gpuError, "clCreateBuffer");
-//   cl_mem clBuffer3 = clCreateBuffer(clContext,CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray3, &gpuError);
-//   handleError(gpuError, "clCreateBuffer");
-//   cl_mem clBuffer4 = clCreateBuffer(clContext,CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray4, &gpuError);
-//   handleError(gpuError, "clCreateBuffer");
+//   cl_mem clBuffer1 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray1, &error);
+//   handleError(error, "clCreateBuffer");
+//   cl_mem clBuffer2 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray2, &error);
+//   handleError(error, "clCreateBuffer");
+//   cl_mem clBuffer3 = clCreateBuffer(clContext,CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray3, &error);
+//   handleError(error, "clCreateBuffer");
+//   cl_mem clBuffer4 = clCreateBuffer(clContext,CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray4, &error);
+//   handleError(error, "clCreateBuffer");
 
-//   cl_kernel kernel = clCreateKernel(clProgram, "vector_fma", &gpuError);
-//   handleError(gpuError, "clCreateKernel");
+//   cl_kernel kernel = clCreateKernel(clProgram, "vector_fma", &error);
+//   handleError(error, "clCreateKernel");
 
-//   gpuError = clSetKernelArg(kernel, 0, sizeof(cl_mem), &clBuffer1);
-//   handleError(gpuError, "clSetKernelArg");
-//   gpuError = clSetKernelArg(kernel, 1, sizeof(cl_mem), &clBuffer2);
-//   handleError(gpuError, "clSetKernelArg");
-//   gpuError = clSetKernelArg(kernel, 2, sizeof(cl_mem), &clBuffer3);
-//   handleError(gpuError, "clSetKernelArg");
-//   gpuError = clSetKernelArg(kernel, 3, sizeof(cl_mem), &clBuffer4);
-//   handleError(gpuError, "clSetKernelArg");
+//   error = clSetKernelArg(kernel, 0, sizeof(cl_mem), &clBuffer1);
+//   handleError(error, "clSetKernelArg");
+//   error = clSetKernelArg(kernel, 1, sizeof(cl_mem), &clBuffer2);
+//   handleError(error, "clSetKernelArg");
+//   error = clSetKernelArg(kernel, 2, sizeof(cl_mem), &clBuffer3);
+//   handleError(error, "clSetKernelArg");
+//   error = clSetKernelArg(kernel, 3, sizeof(cl_mem), &clBuffer4);
+//   handleError(error, "clSetKernelArg");
 
 //   size_t global_item_size[] = {(size_t)clLength};
 
-//   gpuError = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
+//   error = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
 //                          global_item_size, NULL, 0, NULL, NULL);
-//   handleError(gpuError, "clEnqueueNDRangeKernel");
+//   handleError(error, "clEnqueueNDRangeKernel");
 
 //   clReleaseKernel(kernel);
 // } JVM_END
 
 JVM_ENTRY(jfloat, GPUSupport_reduceAdd(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jContext, jlong jCommandQueue, jfloatArray jArray1, jint length)) {
+  cl_int error = 0;
   cl_program clProgram = (cl_program)jProgram;
   cl_context clContext = (cl_context)jContext;
   cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
   float * cArray1 = env->GetFloatArrayElements(jArray1, 0);
   int clLength = (int)length;
 
-  cl_mem clBuffer1 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray1, &gpuError);
-  handleError(gpuError, "clCreateBuffer");
+  cl_mem clBuffer1 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray1, &error);
+  handleError(error, "clCreateBuffer");
 
-  cl_mem clBuffer2 = clCreateBuffer(clContext, CL_MEM_READ_WRITE, sizeof(float), NULL, &gpuError);
-  handleError(gpuError, "clCreateBuffer");
+  cl_mem clBuffer2 = clCreateBuffer(clContext, CL_MEM_READ_WRITE, sizeof(float), NULL, &error);
+  handleError(error, "clCreateBuffer");
 
-  cl_kernel kernel = clCreateKernel(clProgram, "vector_reduce", &gpuError);
-  handleError(gpuError, "clCreateKernel");
+  cl_kernel kernel = clCreateKernel(clProgram, "vector_reduce", &error);
+  handleError(error, "clCreateKernel");
 
-  gpuError = clSetKernelArg(kernel, 0, sizeof(cl_mem), &clBuffer1);
-  handleError(gpuError, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 0, sizeof(cl_mem), &clBuffer1);
+  handleError(error, "clSetKernelArg");
 
 
-  gpuError = clSetKernelArg(kernel, 1, sizeof(cl_mem), &clBuffer2);
-  handleError(gpuError, "setArgs");
+  error = clSetKernelArg(kernel, 1, sizeof(cl_mem), &clBuffer2);
+  handleError(error, "setArgs");
 
   size_t global_item_size[] = {(size_t)clLength};
 
-  gpuError = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
+  error = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
                          global_item_size, NULL, 0, NULL, NULL);
-  handleError(gpuError, "clEnqueueNDRangeKernel");
+  handleError(error, "clEnqueueNDRangeKernel");
 
   float sum = 0;
   clEnqueueReadBuffer(clCommandQueue, clBuffer2, CL_TRUE, 0, sizeof(float), &sum, 0, NULL, NULL);
 
-  gpuError = clFinish(clCommandQueue);
-  handleError(gpuError, "clFinish");
+  error = clFinish(clCommandQueue);
+  handleError(error, "clFinish");
   clReleaseKernel(kernel);
   env->ReleaseFloatArrayElements(jArray1, cArray1, 0);
   return sum;
@@ -401,6 +409,7 @@ JVM_ENTRY(jfloat, GPUSupport_reduceAdd(JNIEnv *env, jclass vsclazz, jlong jProgr
 
 
 JVM_ENTRY(void, GPUSupport_subtractionMinuend(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jContext, jlong jCommandQueue, jfloatArray jArray1, jfloatArray jArray2, jfloat jMinuend, jint length)) {
+  cl_int error = 0;
   cl_program clProgram = (cl_program)jProgram;
   cl_context clContext = (cl_context)jContext;
   cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
@@ -409,35 +418,36 @@ JVM_ENTRY(void, GPUSupport_subtractionMinuend(JNIEnv *env, jclass vsclazz, jlong
   float clMinuend = (float)jMinuend;
   int clLength = (int)length;
 
-  cl_mem clBuffer1 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray1, &gpuError);
-  handleError(gpuError, "clCreateBuffer");
-  cl_mem clBuffer2 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray2, &gpuError);
-  handleError(gpuError, "clCreateBuffer");
+  cl_mem clBuffer1 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray1, &error);
+  handleError(error, "clCreateBuffer");
+  cl_mem clBuffer2 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray2, &error);
+  handleError(error, "clCreateBuffer");
 
-  cl_kernel kernel = clCreateKernel(clProgram, "subtraction_minuend", &gpuError);
-  handleError(gpuError, "clCreateKernel");
+  cl_kernel kernel = clCreateKernel(clProgram, "subtraction_minuend", &error);
+  handleError(error, "clCreateKernel");
 
-  gpuError = clSetKernelArg(kernel, 0, sizeof(cl_mem), &clBuffer1);
-  handleError(gpuError, "clSetKernelArg");
-  gpuError = clSetKernelArg(kernel, 1, sizeof(cl_mem), &clBuffer2);
-  handleError(gpuError, "clSetKernelArg");
-  gpuError = clSetKernelArg(kernel, 2, sizeof(float), &clMinuend);
-  handleError(gpuError, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 0, sizeof(cl_mem), &clBuffer1);
+  handleError(error, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 1, sizeof(cl_mem), &clBuffer2);
+  handleError(error, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 2, sizeof(float), &clMinuend);
+  handleError(error, "clSetKernelArg");
 
   size_t global_item_size[] = {(size_t)clLength};
 
-  gpuError = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
+  error = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
                          global_item_size, NULL, 0, NULL, NULL);
-  handleError(gpuError, "clEnqueueNDRangeKernel");
+  handleError(error, "clEnqueueNDRangeKernel");
 
-  gpuError = clFinish(clCommandQueue);
-  handleError(gpuError, "clFinish");
+  error = clFinish(clCommandQueue);
+  handleError(error, "clFinish");
   clReleaseKernel(kernel);
   env->ReleaseFloatArrayElements(jArray1, cArray1, 0);
   env->ReleaseFloatArrayElements(jArray2, cArray2, 0);
 } JVM_END
 
 JVM_ENTRY(void, GPUSupport_multiply(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jContext, jlong jCommandQueue, jfloatArray jArray1, jfloatArray jArray2, jfloat jFactor, jint length)) {
+  cl_int error = 0;
   cl_program clProgram = (cl_program)jProgram;
   cl_context clContext = (cl_context)jContext;
   cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
@@ -446,35 +456,36 @@ JVM_ENTRY(void, GPUSupport_multiply(JNIEnv *env, jclass vsclazz, jlong jProgram,
   float clFactor = (float)jFactor;
   int clLength = (int)length;
 
-  cl_mem clBuffer1 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray1, &gpuError);
-  handleError(gpuError, "clCreateBuffer");
-  cl_mem clBuffer2 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray2, &gpuError);
-  handleError(gpuError, "clCreateBuffer");
+  cl_mem clBuffer1 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray1, &error);
+  handleError(error, "clCreateBuffer");
+  cl_mem clBuffer2 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray2, &error);
+  handleError(error, "clCreateBuffer");
 
-  cl_kernel kernel = clCreateKernel(clProgram, "multiply", &gpuError);
-  handleError(gpuError, "clCreateKernel");
+  cl_kernel kernel = clCreateKernel(clProgram, "multiply", &error);
+  handleError(error, "clCreateKernel");
 
-  gpuError = clSetKernelArg(kernel, 0, sizeof(cl_mem), &clBuffer1);
-  handleError(gpuError, "clSetKernelArg");
-  gpuError = clSetKernelArg(kernel, 1, sizeof(cl_mem), &clBuffer2);
-  handleError(gpuError, "clSetKernelArg");
-  gpuError = clSetKernelArg(kernel, 2, sizeof(float), &clFactor);
-  handleError(gpuError, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 0, sizeof(cl_mem), &clBuffer1);
+  handleError(error, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 1, sizeof(cl_mem), &clBuffer2);
+  handleError(error, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 2, sizeof(float), &clFactor);
+  handleError(error, "clSetKernelArg");
 
   size_t global_item_size[] = {(size_t)clLength};
 
-  gpuError = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
+  error = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
                          global_item_size, NULL, 0, NULL, NULL);
-  handleError(gpuError, "clEnqueueNDRangeKernel");
+  handleError(error, "clEnqueueNDRangeKernel");
 
-  gpuError = clFinish(clCommandQueue);
-  handleError(gpuError, "clFinish");
+  error = clFinish(clCommandQueue);
+  handleError(error, "clFinish");
   clReleaseKernel(kernel);
   env->ReleaseFloatArrayElements(jArray1, cArray1, 0);
   env->ReleaseFloatArrayElements(jArray2, cArray2, 0);
 } JVM_END
 
 JVM_ENTRY(void, GPUSupport_multiplyBuffer(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jContext, jlong jCommandQueue, jfloatArray jArray1, jfloatArray jArray2, jfloatArray jArray3, jint length)) {
+  cl_int error = 0;
   cl_program clProgram = (cl_program)jProgram;
   cl_context clContext = (cl_context)jContext;
   cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
@@ -483,31 +494,31 @@ JVM_ENTRY(void, GPUSupport_multiplyBuffer(JNIEnv *env, jclass vsclazz, jlong jPr
   float * cArray3 = env->GetFloatArrayElements(jArray3, 0);
   int clLength = (int)length;
 
-  cl_mem clBuffer1 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray1, &gpuError);
-  handleError(gpuError, "clCreateBuffer");
-  cl_mem clBuffer2 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray2, &gpuError);
-  handleError(gpuError, "clCreateBuffer");
-  cl_mem clBuffer3 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray3, &gpuError);
-  handleError(gpuError, "clCreateBuffer");
+  cl_mem clBuffer1 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray1, &error);
+  handleError(error, "clCreateBuffer");
+  cl_mem clBuffer2 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray2, &error);
+  handleError(error, "clCreateBuffer");
+  cl_mem clBuffer3 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray3, &error);
+  handleError(error, "clCreateBuffer");
 
-  cl_kernel kernel = clCreateKernel(clProgram, "vector_multiply", &gpuError);
-  handleError(gpuError, "clCreateKernel");
+  cl_kernel kernel = clCreateKernel(clProgram, "vector_multiply", &error);
+  handleError(error, "clCreateKernel");
 
-  gpuError = clSetKernelArg(kernel, 0, sizeof(cl_mem), &clBuffer1);
-  handleError(gpuError, "clSetKernelArg");
-  gpuError = clSetKernelArg(kernel, 1, sizeof(cl_mem), &clBuffer2);
-  handleError(gpuError, "clSetKernelArg");
-  gpuError = clSetKernelArgSVMPointer(kernel, 2, clBuffer3);
-  handleError(gpuError, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 0, sizeof(cl_mem), &clBuffer1);
+  handleError(error, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 1, sizeof(cl_mem), &clBuffer2);
+  handleError(error, "clSetKernelArg");
+  error = clSetKernelArgSVMPointer(kernel, 2, clBuffer3);
+  handleError(error, "clSetKernelArg");
 
   size_t global_item_size[] = {(size_t)clLength};
 
-  gpuError = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
+  error = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
                          global_item_size, NULL, 0, NULL, NULL);
-  handleError(gpuError, "clEnqueueNDRangeKernel");
+  handleError(error, "clEnqueueNDRangeKernel");
 
-  gpuError = clFinish(clCommandQueue);
-  handleError(gpuError, "clFinish");
+  error = clFinish(clCommandQueue);
+  handleError(error, "clFinish");
   clReleaseKernel(kernel);
   env->ReleaseFloatArrayElements(jArray1, cArray1, 0);
   env->ReleaseFloatArrayElements(jArray2, cArray2, 0);
@@ -516,6 +527,7 @@ JVM_ENTRY(void, GPUSupport_multiplyBuffer(JNIEnv *env, jclass vsclazz, jlong jPr
 
 
 JVM_ENTRY(void, GPUSupport_sqrt(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jContext, jlong jCommandQueue, jfloatArray jArray1, jfloatArray jArray2, jint length)) {
+  cl_int error = 0;
   cl_program clProgram = (cl_program)jProgram;
   cl_context clContext = (cl_context)jContext;
   cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
@@ -523,33 +535,34 @@ JVM_ENTRY(void, GPUSupport_sqrt(JNIEnv *env, jclass vsclazz, jlong jProgram, jlo
   float * cArray2 = env->GetFloatArrayElements(jArray2, 0);
   int clLength = (int)length;
 
-  cl_mem clBuffer1 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray1, &gpuError);
-  handleError(gpuError, "clCreateBuffer");
-  cl_mem clBuffer2 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray2, &gpuError);
-  handleError(gpuError, "clCreateBuffer");
+  cl_mem clBuffer1 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray1, &error);
+  handleError(error, "clCreateBuffer");
+  cl_mem clBuffer2 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray2, &error);
+  handleError(error, "clCreateBuffer");
 
-  cl_kernel kernel = clCreateKernel(clProgram, "sqrt", &gpuError);
-  handleError(gpuError, "clCreateKernel");
+  cl_kernel kernel = clCreateKernel(clProgram, "sqrt", &error);
+  handleError(error, "clCreateKernel");
 
-  gpuError = clSetKernelArg(kernel, 0, sizeof(cl_mem), &clBuffer1);
-  handleError(gpuError, "clSetKernelArg");
-  gpuError = clSetKernelArg(kernel, 1, sizeof(cl_mem), &clBuffer2);
-  handleError(gpuError, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 0, sizeof(cl_mem), &clBuffer1);
+  handleError(error, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 1, sizeof(cl_mem), &clBuffer2);
+  handleError(error, "clSetKernelArg");
 
   size_t global_item_size[] = {(size_t)clLength};
 
-  gpuError = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
+  error = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
                          global_item_size, NULL, 0, NULL, NULL);
-  handleError(gpuError, "clEnqueueNDRangeKernel");
+  handleError(error, "clEnqueueNDRangeKernel");
 
-  gpuError = clFinish(clCommandQueue);
-  handleError(gpuError, "clFinish");
+  error = clFinish(clCommandQueue);
+  handleError(error, "clFinish");
   clReleaseKernel(kernel);
   env->ReleaseFloatArrayElements(jArray1, cArray1, 0);
   env->ReleaseFloatArrayElements(jArray2, cArray2, 0);
 } JVM_END
 
 JVM_ENTRY(void, GPUSupport_division(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jContext, jlong jCommandQueue, jfloatArray jArray1, jfloatArray jArray2, jfloat jDivisor, jint length)) {
+  cl_int error = 0;
   cl_program clProgram = (cl_program)jProgram;
   cl_context clContext = (cl_context)jContext;
   cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
@@ -558,35 +571,36 @@ JVM_ENTRY(void, GPUSupport_division(JNIEnv *env, jclass vsclazz, jlong jProgram,
   float clDivisor = (float)jDivisor;
   int clLength = (int)length;
 
-  cl_mem clBuffer1 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray1, &gpuError);
-  handleError(gpuError, "clCreateBuffer");
-  cl_mem clBuffer2 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray2, &gpuError);
-  handleError(gpuError, "clCreateBuffer");
+  cl_mem clBuffer1 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray1, &error);
+  handleError(error, "clCreateBuffer");
+  cl_mem clBuffer2 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray2, &error);
+  handleError(error, "clCreateBuffer");
 
-  cl_kernel kernel = clCreateKernel(clProgram, "division", &gpuError);
-  handleError(gpuError, "clCreateKernel");
+  cl_kernel kernel = clCreateKernel(clProgram, "division", &error);
+  handleError(error, "clCreateKernel");
 
-  gpuError = clSetKernelArg(kernel, 0, sizeof(cl_mem), &clBuffer1);
-  handleError(gpuError, "clSetKernelArg");
-  gpuError = clSetKernelArg(kernel, 1, sizeof(cl_mem), &clBuffer2);
-  handleError(gpuError, "clSetKernelArg");
-  gpuError = clSetKernelArg(kernel, 2, sizeof(float), &clDivisor);
-  handleError(gpuError, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 0, sizeof(cl_mem), &clBuffer1);
+  handleError(error, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 1, sizeof(cl_mem), &clBuffer2);
+  handleError(error, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 2, sizeof(float), &clDivisor);
+  handleError(error, "clSetKernelArg");
 
   size_t global_item_size[] = {(size_t)clLength};
 
-  gpuError = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
+  error = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
                          global_item_size, NULL, 0, NULL, NULL);
-  handleError(gpuError, "clEnqueueNDRangeKernel");
+  handleError(error, "clEnqueueNDRangeKernel");
 
-  gpuError = clFinish(clCommandQueue);
-  handleError(gpuError, "clFinish");
+  error = clFinish(clCommandQueue);
+  handleError(error, "clFinish");
   clReleaseKernel(kernel);
   env->ReleaseFloatArrayElements(jArray1, cArray1, 0);
   env->ReleaseFloatArrayElements(jArray2, cArray2, 0);
 } JVM_END
 
 JVM_ENTRY(void, GPUSupport_divisionBuffer(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jContext, jlong jCommandQueue, jfloatArray jArray1, jfloatArray jArray2, jfloatArray jArray3, jint length)) {
+  cl_int error = 0;
   cl_program clProgram = (cl_program)jProgram;
   cl_context clContext = (cl_context)jContext;
   cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
@@ -595,31 +609,31 @@ JVM_ENTRY(void, GPUSupport_divisionBuffer(JNIEnv *env, jclass vsclazz, jlong jPr
   float * cArray3 = env->GetFloatArrayElements(jArray3, 0);
   int clLength = (int)length;
 
-  cl_mem clBuffer1 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray1, &gpuError);
-  handleError(gpuError, "clCreateBuffer");
-  cl_mem clBuffer2 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray2, &gpuError);
-  handleError(gpuError, "clCreateBuffer");
-  cl_mem clBuffer3 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray3, &gpuError);
-  handleError(gpuError, "clCreateBuffer");
+  cl_mem clBuffer1 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray1, &error);
+  handleError(error, "clCreateBuffer");
+  cl_mem clBuffer2 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray2, &error);
+  handleError(error, "clCreateBuffer");
+  cl_mem clBuffer3 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray3, &error);
+  handleError(error, "clCreateBuffer");
 
-  cl_kernel kernel = clCreateKernel(clProgram, "vector_division", &gpuError);
-  handleError(gpuError, "clCreateKernel");
+  cl_kernel kernel = clCreateKernel(clProgram, "vector_division", &error);
+  handleError(error, "clCreateKernel");
 
-  gpuError = clSetKernelArg(kernel, 0, sizeof(cl_mem), &clBuffer1);
-  handleError(gpuError, "clSetKernelArg");
-  gpuError = clSetKernelArg(kernel, 1, sizeof(cl_mem), &clBuffer2);
-  handleError(gpuError, "clSetKernelArg");
-  gpuError = clSetKernelArg(kernel, 2, sizeof(cl_mem), &clBuffer3);
-  handleError(gpuError, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 0, sizeof(cl_mem), &clBuffer1);
+  handleError(error, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 1, sizeof(cl_mem), &clBuffer2);
+  handleError(error, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 2, sizeof(cl_mem), &clBuffer3);
+  handleError(error, "clSetKernelArg");
 
   size_t global_item_size[] = {(size_t)clLength};
 
-  gpuError = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
+  error = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
                          global_item_size, NULL, 0, NULL, NULL);
-  handleError(gpuError, "clEnqueueNDRangeKernel");
+  handleError(error, "clEnqueueNDRangeKernel");
 
-  gpuError = clFinish(clCommandQueue);
-  handleError(gpuError, "clFinish");
+  error = clFinish(clCommandQueue);
+  handleError(error, "clFinish");
   clReleaseKernel(kernel);
   env->ReleaseFloatArrayElements(jArray1, cArray1, 0);
   env->ReleaseFloatArrayElements(jArray2, cArray2, 0);
@@ -627,6 +641,7 @@ JVM_ENTRY(void, GPUSupport_divisionBuffer(JNIEnv *env, jclass vsclazz, jlong jPr
 } JVM_END
 
 JVM_ENTRY(void, GPUSupport_log(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jContext, jlong jCommandQueue, jfloatArray jArray1, jfloatArray jArray2, jint length)) {
+  cl_int error = 0;
   cl_program clProgram = (cl_program)jProgram;
   cl_context clContext = (cl_context)jContext;
   cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
@@ -634,33 +649,34 @@ JVM_ENTRY(void, GPUSupport_log(JNIEnv *env, jclass vsclazz, jlong jProgram, jlon
   float * cArray2 = env->GetFloatArrayElements(jArray2, 0);
   int clLength = (int)length;
 
-  cl_mem clBuffer1 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray1, &gpuError);
-  handleError(gpuError, "clCreateBuffer");
-  cl_mem clBuffer2 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray2, &gpuError);
-  handleError(gpuError, "clCreateBuffer");
+  cl_mem clBuffer1 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray1, &error);
+  handleError(error, "clCreateBuffer");
+  cl_mem clBuffer2 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray2, &error);
+  handleError(error, "clCreateBuffer");
 
-  cl_kernel kernel = clCreateKernel(clProgram, "log", &gpuError);
-  handleError(gpuError, "clCreateKernel");
+  cl_kernel kernel = clCreateKernel(clProgram, "log", &error);
+  handleError(error, "clCreateKernel");
 
-  gpuError = clSetKernelArg(kernel, 0, sizeof(cl_mem), &clBuffer1);
-  handleError(gpuError, "clSetKernelArg");
-  gpuError = clSetKernelArg(kernel, 1, sizeof(cl_mem), &clBuffer2);
-  handleError(gpuError, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 0, sizeof(cl_mem), &clBuffer1);
+  handleError(error, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 1, sizeof(cl_mem), &clBuffer2);
+  handleError(error, "clSetKernelArg");
 
   size_t global_item_size[] = {(size_t)clLength};
 
-  gpuError = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
+  error = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
                          global_item_size, NULL, 0, NULL, NULL);
-  handleError(gpuError, "clEnqueueNDRangeKernel");
+  handleError(error, "clEnqueueNDRangeKernel");
 
-  gpuError = clFinish(clCommandQueue);
-  handleError(gpuError, "clFinish");
+  error = clFinish(clCommandQueue);
+  handleError(error, "clFinish");
   clReleaseKernel(kernel);
   env->ReleaseFloatArrayElements(jArray1, cArray1, 0);
   env->ReleaseFloatArrayElements(jArray2, cArray2, 0);
 } JVM_END
 
 JVM_ENTRY(void, GPUSupport_exp(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jContext, jlong jCommandQueue, jfloatArray jArray1, jfloatArray jArray2, jint length)) {
+  cl_int error = 0;
   cl_program clProgram = (cl_program)jProgram;
   cl_context clContext = (cl_context)jContext;
   cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
@@ -668,33 +684,34 @@ JVM_ENTRY(void, GPUSupport_exp(JNIEnv *env, jclass vsclazz, jlong jProgram, jlon
   float * cArray2 = env->GetFloatArrayElements(jArray2, 0);
   int clLength = (int)length;
 
-  cl_mem clBuffer1 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray1, &gpuError);
-  handleError(gpuError, "clCreateBuffer");
-  cl_mem clBuffer2 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray2, &gpuError);
-  handleError(gpuError, "clCreateBuffer");
+  cl_mem clBuffer1 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray1, &error);
+  handleError(error, "clCreateBuffer");
+  cl_mem clBuffer2 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray2, &error);
+  handleError(error, "clCreateBuffer");
 
-  cl_kernel kernel = clCreateKernel(clProgram, "exp", &gpuError);
-  handleError(gpuError, "clCreateKernel");
+  cl_kernel kernel = clCreateKernel(clProgram, "exp", &error);
+  handleError(error, "clCreateKernel");
 
-  gpuError = clSetKernelArg(kernel, 0, sizeof(cl_mem), &clBuffer1);
-  handleError(gpuError, "clSetKernelArg");
-  gpuError = clSetKernelArg(kernel, 1, sizeof(cl_mem), &clBuffer2);
-  handleError(gpuError, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 0, sizeof(cl_mem), &clBuffer1);
+  handleError(error, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 1, sizeof(cl_mem), &clBuffer2);
+  handleError(error, "clSetKernelArg");
 
   size_t global_item_size[] = {(size_t)clLength};
 
-  gpuError = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
+  error = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
                          global_item_size, NULL, 0, NULL, NULL);
-  handleError(gpuError, "clEnqueueNDRangeKernel");
+  handleError(error, "clEnqueueNDRangeKernel");
 
-  gpuError = clFinish(clCommandQueue);
-  handleError(gpuError, "clFinish");
+  error = clFinish(clCommandQueue);
+  handleError(error, "clFinish");
   clReleaseKernel(kernel);
   env->ReleaseFloatArrayElements(jArray1, cArray1, 0);
   env->ReleaseFloatArrayElements(jArray2, cArray2, 0);
 } JVM_END
 
 JVM_ENTRY(void, GPUSupport_abs(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jContext, jlong jCommandQueue, jfloatArray jArray1, jfloatArray jArray2, jint length)) {
+  cl_int error = 0;
   cl_program clProgram = (cl_program)jProgram;
   cl_context clContext = (cl_context)jContext;
   cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
@@ -702,33 +719,34 @@ JVM_ENTRY(void, GPUSupport_abs(JNIEnv *env, jclass vsclazz, jlong jProgram, jlon
   float * cArray2 = env->GetFloatArrayElements(jArray2, 0);
   int clLength = (int)length;
 
-  cl_mem clBuffer1 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray1, &gpuError);
-  handleError(gpuError, "clCreateBuffer");
-  cl_mem clBuffer2 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray2, &gpuError);
-  handleError(gpuError, "clCreateBuffer");
+  cl_mem clBuffer1 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray1, &error);
+  handleError(error, "clCreateBuffer");
+  cl_mem clBuffer2 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray2, &error);
+  handleError(error, "clCreateBuffer");
 
-  cl_kernel kernel = clCreateKernel(clProgram, "abs", &gpuError);
-  handleError(gpuError, "clCreateKernel");
+  cl_kernel kernel = clCreateKernel(clProgram, "abs", &error);
+  handleError(error, "clCreateKernel");
 
-  gpuError = clSetKernelArg(kernel, 0, sizeof(cl_mem), &clBuffer1);
-  handleError(gpuError, "clSetKernelArg");
-  gpuError = clSetKernelArg(kernel, 1, sizeof(cl_mem), &clBuffer2);
-  handleError(gpuError, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 0, sizeof(cl_mem), &clBuffer1);
+  handleError(error, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 1, sizeof(cl_mem), &clBuffer2);
+  handleError(error, "clSetKernelArg");
 
   size_t global_item_size[] = {(size_t)clLength};
 
-  gpuError = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
+  error = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
                          global_item_size, NULL, 0, NULL, NULL);
-  handleError(gpuError, "clEnqueueNDRangeKernel");
+  handleError(error, "clEnqueueNDRangeKernel");
 
-  gpuError = clFinish(clCommandQueue);
-  handleError(gpuError, "clFinish");
+  error = clFinish(clCommandQueue);
+  handleError(error, "clFinish");
   clReleaseKernel(kernel);
   env->ReleaseFloatArrayElements(jArray1, cArray1, 0);
   env->ReleaseFloatArrayElements(jArray2, cArray2, 0);
 } JVM_END
 
 JVM_ENTRY(void, GPUSupport_compareGT(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jContext, jlong jCommandQueue, jfloatArray jArray1, jfloat jComparee, jfloatArray jArray2, jint length)) {
+  cl_int error = 0;
   cl_program clProgram = (cl_program)jProgram;
   cl_context clContext = (cl_context)jContext;
   cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
@@ -737,35 +755,36 @@ JVM_ENTRY(void, GPUSupport_compareGT(JNIEnv *env, jclass vsclazz, jlong jProgram
   float clComparee = (float)jComparee;
   int clLength = (int)length;
 
-  cl_mem clBuffer1 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray1, &gpuError);
-  handleError(gpuError, "clCreateBuffer");
-  cl_mem clBuffer2 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray2, &gpuError);
-  handleError(gpuError, "clCreateBuffer");
+  cl_mem clBuffer1 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray1, &error);
+  handleError(error, "clCreateBuffer");
+  cl_mem clBuffer2 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray2, &error);
+  handleError(error, "clCreateBuffer");
 
-  cl_kernel kernel = clCreateKernel(clProgram, "compareGT", &gpuError);
-  handleError(gpuError, "clCreateKernel");
+  cl_kernel kernel = clCreateKernel(clProgram, "compareGT", &error);
+  handleError(error, "clCreateKernel");
 
-  gpuError = clSetKernelArg(kernel, 0, sizeof(cl_mem), &clBuffer1);
-  handleError(gpuError, "clSetKernelArg");
-  gpuError = clSetKernelArg(kernel, 1, sizeof(cl_mem), &clBuffer2);
-  handleError(gpuError, "clSetKernelArg");
-  gpuError = clSetKernelArg(kernel, 2, sizeof(float), &clComparee);
-  handleError(gpuError, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 0, sizeof(cl_mem), &clBuffer1);
+  handleError(error, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 1, sizeof(cl_mem), &clBuffer2);
+  handleError(error, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 2, sizeof(float), &clComparee);
+  handleError(error, "clSetKernelArg");
 
   size_t global_item_size[] = {(size_t)clLength};
 
-  gpuError = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
+  error = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
                          global_item_size, NULL, 0, NULL, NULL);
-  handleError(gpuError, "clEnqueueNDRangeKernel");
+  handleError(error, "clEnqueueNDRangeKernel");
 
-  gpuError = clFinish(clCommandQueue);
-  handleError(gpuError, "clFinish");
+  error = clFinish(clCommandQueue);
+  handleError(error, "clFinish");
   clReleaseKernel(kernel);
   env->ReleaseFloatArrayElements(jArray1, cArray1, 0);
   env->ReleaseFloatArrayElements(jArray2, cArray2, 0);
 } JVM_END
 
 JVM_ENTRY(void, GPUSupport_blend(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jContext, jlong jCommandQueue, jfloatArray jArray1, jfloatArray jArray2, jfloatArray jMask, jfloatArray jArray3, jint length)) {
+  cl_int error = 0;
   cl_program clProgram = (cl_program)jProgram;
   cl_context clContext = (cl_context)jContext;
   cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
@@ -775,35 +794,35 @@ JVM_ENTRY(void, GPUSupport_blend(JNIEnv *env, jclass vsclazz, jlong jProgram, jl
   float * cArray3 = env->GetFloatArrayElements(jArray3, 0);
   int clLength = (int)length;
 
-  cl_mem clBuffer1 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray1, &gpuError);
-  handleError(gpuError, "clCreateBuffer");
-  cl_mem clBuffer2 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray2, &gpuError);
-  handleError(gpuError, "clCreateBuffer");
-  cl_mem clMaskBuffer = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cMask, &gpuError);
-  handleError(gpuError, "clCreateBuffer");
-  cl_mem clBuffer3 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray3, &gpuError);
-  handleError(gpuError, "clCreateBuffer");
+  cl_mem clBuffer1 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray1, &error);
+  handleError(error, "clCreateBuffer");
+  cl_mem clBuffer2 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray2, &error);
+  handleError(error, "clCreateBuffer");
+  cl_mem clMaskBuffer = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cMask, &error);
+  handleError(error, "clCreateBuffer");
+  cl_mem clBuffer3 = clCreateBuffer(clContext, CL_MEM_USE_HOST_PTR, sizeof(float) * clLength, cArray3, &error);
+  handleError(error, "clCreateBuffer");
 
-  cl_kernel kernel = clCreateKernel(clProgram, "blend", &gpuError);
-  handleError(gpuError, "clCreateKernel");
+  cl_kernel kernel = clCreateKernel(clProgram, "blend", &error);
+  handleError(error, "clCreateKernel");
 
-  gpuError = clSetKernelArg(kernel, 0, sizeof(cl_mem), &clBuffer1);
-  handleError(gpuError, "clSetKernelArg");
-  gpuError = clSetKernelArg(kernel, 1, sizeof(cl_mem), &clBuffer2);
-  handleError(gpuError, "clSetKernelArg");
-  gpuError = clSetKernelArg(kernel, 2, sizeof(cl_mem), &clMaskBuffer);
-  handleError(gpuError, "clSetKernelArg");
-  gpuError = clSetKernelArg(kernel, 3, sizeof(cl_mem), &clBuffer3);
-  handleError(gpuError, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 0, sizeof(cl_mem), &clBuffer1);
+  handleError(error, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 1, sizeof(cl_mem), &clBuffer2);
+  handleError(error, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 2, sizeof(cl_mem), &clMaskBuffer);
+  handleError(error, "clSetKernelArg");
+  error = clSetKernelArg(kernel, 3, sizeof(cl_mem), &clBuffer3);
+  handleError(error, "clSetKernelArg");
 
   size_t global_item_size[] = {(size_t)clLength};
 
-  gpuError = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
+  error = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
                          global_item_size, NULL, 0, NULL, NULL);
-  handleError(gpuError, "clEnqueueNDRangeKernel");
+  handleError(error, "clEnqueueNDRangeKernel");
 
-  gpuError = clFinish(clCommandQueue);
-  handleError(gpuError, "clFinish");
+  error = clFinish(clCommandQueue);
+  handleError(error, "clFinish");
   clReleaseKernel(kernel);
   env->ReleaseFloatArrayElements(jArray1, cArray1, 0);
   env->ReleaseFloatArrayElements(jArray2, cArray2, 0);
