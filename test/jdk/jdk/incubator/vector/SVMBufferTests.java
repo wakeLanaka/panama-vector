@@ -134,7 +134,7 @@ public class SVMBufferTests {
     }
 
     private static void MultiplyInPlaceBufferFloat(SVMBuffer buffer, SVMBuffer factors, float[] a, float[] b) throws Exception {
-        var result = buffer.MultiplyInPlace(factors);
+        var result = buffer.mulInPlace(factors);
         var resultArray = new float[buffer.length];
         result.intoArray(resultArray);
         String info =  "MultiplyInPlaceBufferFloat";
@@ -144,7 +144,7 @@ public class SVMBufferTests {
     }
 
     private static void MultiplyBufferFloat(SVMBuffer buffer, SVMBuffer factors, float[] a, float[] b) throws Exception {
-        var result = buffer.Multiply(factors);
+        var result = buffer.mul(factors);
         var resultArray = new float[buffer.length];
         result.intoArray(resultArray);
         String info =  "MultiplyBufferFloat";
@@ -154,7 +154,7 @@ public class SVMBufferTests {
     }
 
     private static void MultiplyFloat(SVMBuffer buffer, float[] a, float b) throws Exception {
-        var result = buffer.Multiply(b);
+        var result = buffer.mul(b);
         var resultArray = new float[buffer.length];
         result.intoArray(resultArray);
         String info =  "MultiplyFloat";
@@ -163,7 +163,7 @@ public class SVMBufferTests {
     }
 
     private static void MultiplyInPlaceFloat(SVMBuffer buffer, float[] a, float b) throws Exception {
-        var result = buffer.MultiplyInPlace(b);
+        var result = buffer.mulInPlace(b);
         var resultArray = new float[buffer.length];
         result.intoArray(resultArray);
         String info =  "MultiplyInPlaceFloat";
@@ -172,9 +172,8 @@ public class SVMBufferTests {
         checkBufferAddressEqual(result, buffer, info);
     }
 
-
     private static void AddBufferFloat(SVMBuffer buffer, SVMBuffer summand, float[] a, float[] b) throws Exception {
-        var result = buffer.Add(summand);
+        var result = buffer.add(summand);
         var resultArray = new float[buffer.length];
         result.intoArray(resultArray);
         String info = "AddBufferFloat";
@@ -184,7 +183,7 @@ public class SVMBufferTests {
     }
 
     private static void AddBufferInPlaceFloat(SVMBuffer buffer, SVMBuffer summand, float[] a, float[] b) throws Exception {
-        var result = buffer.AddInPlace(summand);
+        var result = buffer.addInPlace(summand);
         var resultArray = new float[buffer.length];
         result.intoArray(resultArray);
         String info = "AddInPlaceFloat";
@@ -194,7 +193,7 @@ public class SVMBufferTests {
     }
 
     private static void SubtractBufferFloat(SVMBuffer buffer, SVMBuffer summand, float[] a, float[] b) throws Exception {
-        var result = buffer.Subtract(summand);
+        var result = buffer.sub(summand);
         var resultArray = new float[buffer.length];
         result.intoArray(resultArray);
         String info = "SubtractBufferFloat";
@@ -204,7 +203,7 @@ public class SVMBufferTests {
     }
 
     private static void SubtractFloat(SVMBuffer buffer, float[] a, float b) throws Exception {
-        var result = buffer.Subtract(b);
+        var result = buffer.sub(b);
         var resultArray = new float[buffer.length];
         result.intoArray(resultArray);
         String info = "SubtractFloat";
@@ -213,7 +212,7 @@ public class SVMBufferTests {
     }
 
     private static void SubtractInPlaceFloat(SVMBuffer buffer, SVMBuffer summand, float[] a, float[] b) throws Exception {
-        var result = buffer.SubtractInPlace(summand);
+        var result = buffer.subInPlace(summand);
         var resultArray = new float[buffer.length];
         result.intoArray(resultArray);
         String info =  "SubtractInPlaceFloat";
@@ -224,13 +223,13 @@ public class SVMBufferTests {
 
     private static void BroadcastFloat(float value) throws Exception {
         float[] resultArray = new float[SVMBufferTests.size];
-        var buffer = SVMBuffer.Broadcast(SPECIES, value, SVMBufferTests.size);
+        var buffer = SVMBuffer.broadcast(SPECIES, value, SVMBufferTests.size);
         buffer.intoArray(resultArray);
         checkArrayValue(resultArray, value, "BroadcastFloat");
     }
 
     private static void DivisionInPlaceBufferFloat(SVMBuffer buffer, SVMBuffer factors, float[] a, float[] b) throws Exception {
-        var result = buffer.DivisionInPlace(factors);
+        var result = buffer.divInPlace(factors);
         var resultArray = new float[buffer.length];
         result.intoArray(resultArray);
         String info =  "DivisionInPlaceBufferFloat";
@@ -240,7 +239,7 @@ public class SVMBufferTests {
     }
 
     private static void DivisionBufferFloat(SVMBuffer buffer, SVMBuffer factors, float[] a, float[] b) throws Exception {
-        var result = buffer.Division(factors);
+        var result = buffer.div(factors);
         var resultArray = new float[buffer.length];
         result.intoArray(resultArray);
         String info =  "DivisionBufferFloat";
@@ -250,7 +249,7 @@ public class SVMBufferTests {
     }
 
     private static void DivisionFloat(SVMBuffer buffer, float[] a, float b) throws Exception {
-        var result = buffer.Division(b);
+        var result = buffer.div(b);
         var resultArray = new float[buffer.length];
         result.intoArray(resultArray);
         String info =  "DivisionFloat";
@@ -259,7 +258,7 @@ public class SVMBufferTests {
     }
 
     private static void DivisionInPlaceFloat(SVMBuffer buffer, float[] a, float b) throws Exception {
-        var result = buffer.DivisionInPlace(b);
+        var result = buffer.divInPlace(b);
         var resultArray = new float[buffer.length];
         result.intoArray(resultArray);
         String info =  "DivisionInPlaceFloat";
@@ -269,7 +268,7 @@ public class SVMBufferTests {
     }
 
     private static void SqrtFloat(SVMBuffer buffer, float[] a) throws Exception {
-        var result = buffer.Sqrt();
+        var result = buffer.sqrt();
         var resultArray = new float[buffer.length];
         result.intoArray(resultArray);
         var expectedArray = ArraySqrt(a);
@@ -279,7 +278,7 @@ public class SVMBufferTests {
     }
 
     private static void SqrtInPlaceFloat(SVMBuffer buffer, float[] a) throws Exception {
-        var result = buffer.SqrtInPlace();
+        var result = buffer.sqrtInPlace();
         var resultArray = new float[buffer.length];
         result.intoArray(resultArray);
         var expectedArray = ArraySqrt(a);
@@ -289,7 +288,7 @@ public class SVMBufferTests {
     }
 
     private static void LogFloat(SVMBuffer buffer, float[] a) throws Exception {
-        var result = buffer.Log();
+        var result = buffer.log();
         var resultArray = new float[buffer.length];
         result.intoArray(resultArray);
         var expectedArray = ArrayLog(a);
@@ -299,7 +298,7 @@ public class SVMBufferTests {
     }
 
     private static void LogInPlaceFloat(SVMBuffer buffer, float[] a) throws Exception {
-        var result = buffer.LogInPlace();
+        var result = buffer.logInPlace();
         var resultArray = new float[buffer.length];
         result.intoArray(resultArray);
         var expectedArray = ArrayLog(a);
@@ -309,7 +308,7 @@ public class SVMBufferTests {
     }
 
     private static void CosFloat(SVMBuffer buffer, float[] a) throws Exception {
-        var result = buffer.Cos();
+        var result = buffer.cos();
         var resultArray = new float[buffer.length];
         result.intoArray(resultArray);
         var expectedArray = ArrayCos(a);
@@ -319,7 +318,7 @@ public class SVMBufferTests {
     }
 
     private static void CosInPlaceFloat(SVMBuffer buffer, float[] a) throws Exception {
-        var result = buffer.CosInPlace();
+        var result = buffer.cosInPlace();
         var resultArray = new float[buffer.length];
         result.intoArray(resultArray);
         var expectedArray = ArrayCos(a);
@@ -329,7 +328,7 @@ public class SVMBufferTests {
     }
 
     private static void ExpFloat(SVMBuffer buffer, float[] a) throws Exception {
-        var result = buffer.Exp();
+        var result = buffer.exp();
         var resultArray = new float[buffer.length];
         result.intoArray(resultArray);
         var expectedArray = ArrayExp(a);
@@ -342,7 +341,7 @@ public class SVMBufferTests {
     }
 
     private static void ExpInPlaceFloat(SVMBuffer buffer, float[] a) throws Exception {
-        var result = buffer.ExpInPlace();
+        var result = buffer.expInPlace();
         var resultArray = new float[buffer.length];
         result.intoArray(resultArray);
         var expectedArray = ArrayExp(a);
@@ -353,7 +352,7 @@ public class SVMBufferTests {
     }
 
     private static void AbsFloat(SVMBuffer buffer, float[] a) throws Exception {
-        var result = buffer.Abs();
+        var result = buffer.abs();
         var resultArray = new float[buffer.length];
         result.intoArray(resultArray);
         var expectedArray = ArrayAbs(a);
@@ -363,7 +362,7 @@ public class SVMBufferTests {
     }
 
     private static void AbsInPlaceFloat(SVMBuffer buffer, float[] a) throws Exception {
-        var result = buffer.AbsInPlace();
+        var result = buffer.absInPlace();
         var resultArray = new float[buffer.length];
         result.intoArray(resultArray);
         var expectedArray = ArrayAbs(a);
@@ -373,7 +372,7 @@ public class SVMBufferTests {
     }
 
     private static void SinFloat(SVMBuffer buffer, float[] a) throws Exception {
-        var result = buffer.Sin();
+        var result = buffer.sin();
         var resultArray = new float[buffer.length];
         result.intoArray(resultArray);
         var expectedArray = ArraySin(a);
@@ -383,7 +382,7 @@ public class SVMBufferTests {
     }
 
     private static void SinInPlaceFloat(SVMBuffer buffer, float[] a) throws Exception {
-        var result = buffer.SinInPlace();
+        var result = buffer.sinInPlace();
         var resultArray = new float[buffer.length];
         result.intoArray(resultArray);
         var expectedArray = ArraySin(a);
