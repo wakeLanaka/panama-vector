@@ -52,17 +52,31 @@ public class SVMBuffer {
     }
 
     /**
+     *  Loads a SVMBuffer with elements from an array of type {@code float[]}
+     *  @param info for the gpu
+     *  @param array to be copied to the SVMBuffer
+     *  @param index of first element to be copied to SVMBuffer
+     *  @param amount of elements to be copied to SVMBuffer
+     *  @return the SVMBuffer loaded from the array
+     */
+    public static SVMBuffer fromArray(GPUInformation info, float[] array, int index, int amount) {
+        return new SVMBuffer(info, Arrays.copyOfRange(array, index, index + amount));
+    }
+
+    /**
      *  Fused multiply-add (FMA) of SVMBuffers. This method can be used for
      *  array multiplication.
-     *  @param factor the factor used in FMA
-     *  @param summand the summand and result used in FMA
+     *  @param factor used in FMA
+     *  @param summand used in FMA
      *  @param m amount of columns of this SVMBuffers
      *  @param n amount of columns of the factor SVMBuffer
-     *  @param k the kth column of this SVMBuffer is gets calculated with the
-     *  kth row of the factor SVMBuffer
+     *  @param k the kth column of this is getting fma with the kth
+     *  row of the factor
+     *  @return sumand of fma
      */
-    public void matrixFma(SVMBuffer factor, SVMBuffer summand, int m, int n, int k) {
+    public SVMBuffer matrixFma(SVMBuffer factor, SVMBuffer summand, int m, int n, int k) {
         SVMBufferSupport.MatrixFmaSVMBuffer(this.info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, factor.svmBuffer, summand.svmBuffer, m, n, k, summand.length);
+        return summand;
     }
 
     /**
@@ -73,26 +87,15 @@ public class SVMBuffer {
      */
     public SVMBuffer fma(SVMBuffer factor, SVMBuffer summand){
         SVMBuffer result = new SVMBuffer(info, length);
-
         SVMBufferSupport.FmaSVMBuffer(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, factor.svmBuffer, summand.svmBuffer, result.svmBuffer, summand.length);
         return result;
-    }
-
-    /**
-     *  Fused multiply-add (FMA) of SVMBuffers.
-     *  @param factor the factor used in FMA
-     *  @param summand the summand and result used in FMA
-     *  @param result the result of the FMA
-     */
-    public void fma(SVMBuffer factor, SVMBuffer summand, SVMBuffer result){
-        SVMBufferSupport.FmaSVMBuffer(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, factor.svmBuffer, summand.svmBuffer, result.svmBuffer, summand.length);
     }
 
     /**
      *  Reduces this SVMBuffer to a single value using addition
      *  @return the result of the sum reduction
      */
-    public float SumReduce(){
+    public float sumReduce(){
         return SVMBufferSupport.SumReduce(info.GetContext(), info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, info.GetMaxWorkGroupSize(), this.length);
     }
 

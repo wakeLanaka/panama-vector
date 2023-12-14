@@ -526,7 +526,7 @@ public class SVMBufferTests {
     }
 
     private static void SumReduceFloat(SVMBuffer buffer, int size) throws Exception {
-        var result = buffer.SumReduce();
+        var result = buffer.sumReduce();
         var resultExpected = (size + 1) * (size/2.0f) - size;
         if (Math.abs(result - resultExpected) > SVMBufferTests.delta) {
             throw new RuntimeException("SumReduce: is " + result + ", expected: " + resultExpected);
