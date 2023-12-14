@@ -6,11 +6,16 @@ If you are eager to try out building the JDK, these simple steps works most of
 the time. They assume that you have installed Git (and Cygwin if running
 on Windows) and cloned the top-level JDK repository that you want to build.
 
- 1. [Get the complete source code](#getting-the-source-code): \
+ 1. [Install OpenCL](#install-opencl)
+
+ 2. [Get the complete source code](#getting-the-source-code): \
     `git clone https://git.openjdk.org/jdk/`
 
- 2. [Run configure](#running-configure): \
-    `bash configure`
+ 3. [Run configure](#running-configure): \
+    For Linux: `bash configure --with-extra-cxxflags=-lOpenCL`
+    For Windows: `bash configure
+    --with-extra-ldflags="/LIBPATH:C/PATH/TO/OPENCL/lib OpenCL.lib"
+    --wiht-extra-cxxflags="/I C:/PATH/TO/OPENCL/includez"`
 
     If `configure` fails due to missing dependencies (to either the
     [toolchain](#native-compiler-toolchain-requirements), [build tools](
@@ -20,13 +25,13 @@ on Windows) and cloned the top-level JDK repository that you want to build.
     your platform. Follow the instructions, and try running `bash configure`
     again.
 
- 3. [Run make](#running-make): \
+ 4. [Run make](#running-make): \
     `make images`
 
- 4. Verify your newly built JDK: \
+ 5. Verify your newly built JDK: \
     `./build/*/images/jdk/bin/java -version`
 
- 5. [Run basic tests](##running-tests): \
+ 6. [Run basic tests](##running-tests): \
     `make run-test-tier1`
 
 If any of these steps failed, or if you want to know more about build
@@ -42,6 +47,14 @@ If you just want to use the JDK and not build it yourself, this document is not
 for you. See for instance [OpenJDK installation](
 http://openjdk.org/install) for some methods of installing a prebuilt
 JDK.
+
+## Install OpenCL
+
+Make sure OpenCL is installed on your device. The drivers for the respectively
+vendor can be donwloaded at the following links:
+- [Intel](https://www.intel.com/content/www/us/en/developer/articles/tool/opencl-drivers.html)
+- [AMD](https://www.amd.com/en/support)
+- [NVIDIA](https://www.nvidia.com/Download/index.aspx)
 
 ## Getting the Source Code
 
