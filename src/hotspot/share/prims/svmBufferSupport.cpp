@@ -1,10 +1,10 @@
-#include <cmath>
 #include "precompiled.hpp"
 #include "prims/svmBufferSupport.hpp"
 #include "runtime/interfaceSupport.inline.hpp"
 #include "openclHelper.hpp"
 #define CL_TARGET_OPENCL_VERSION 300
 #include "CL/cl.h"
+#include <cmath>
 
 JVM_ENTRY(jlong, SVMBufferSupport_createContext(JNIEnv *env, jclass vsclazz, jlong jDevice)) {
   cl_int error = 0;
@@ -466,6 +466,44 @@ JVM_ENTRY(void, SVMBufferSupport_multiplyBuffer(JNIEnv *env, jclass vsclazz, jlo
   clReleaseKernel(kernel);
 } JVM_END
 
+JVM_ENTRY(void, SVMBufferSupport_multiplyRange(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jCommandQueue, jlong jBuffer1, jint index1, jlong jBuffer2, jint index2, jlong jBuffer3, jint length)) {
+  cl_int error = 0;
+  cl_program clProgram = (cl_program)jProgram;
+  cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
+  float* clBuffer1 = (float *)jBuffer1;
+  float* clBuffer2 = (float *)jBuffer2;
+  float* clBuffer3 = (float *)jBuffer3;
+  int clIndex1 = (int)index1;
+  int clIndex2 = (int)index2;
+  int clLength = (int)length;
+
+  cl_kernel kernel = clCreateKernel(clProgram, "multiplyrange", &error);
+  handleError(error, "clCreateKernel");
+
+  error = clSetKernelArgSVMPointer(kernel, 0, clBuffer1);
+  handleError(error, "clSetKernelArg");
+
+  error = clSetKernelArgSVMPointer(kernel, 1, clBuffer2);
+  handleError(error, "clSetKernelArg");
+
+  error = clSetKernelArgSVMPointer(kernel, 2, clBuffer3);
+  handleError(error, "clSetKernelArg");
+
+  error = clSetKernelArg(kernel, 3, sizeof(int), &clIndex1);
+  handleError(error, "clSetKernelArg");
+
+  error = clSetKernelArg(kernel, 4, sizeof(int), &clIndex2);
+  handleError(error, "clSetKernelArg");
+
+  size_t global_item_size[] = {(size_t)clLength};
+
+  error = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
+                         global_item_size, NULL, 0, NULL, NULL);
+  handleError(error, "clEnqueueNDRangeKernel");
+
+  clReleaseKernel(kernel);
+} JVM_END
+
 
 JVM_ENTRY(void, SVMBufferSupport_sqrt(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jCommandQueue, jlong jBuffer1, jlong jBuffer2, jint length)) {
   cl_int error = 0;
@@ -916,7 +954,7 @@ JVM_ENTRY(jlong, ExecBufferSupport_createExecKernel(JNIEnv *env, jclass vsclazz,
   cl_program clProgram = (cl_program)jProgram;
   cl_kernel clKernel = clCreateKernel(clProgram, "exec", &error);
   handleError(error, "clCreateKernel");
-  return (long)clKernel;
+  return (jlong)clKernel;
 } JVM_END
 
 JVM_ENTRY(void, ExecBufferSupport_setKernelArgumentSVMBuffer(JNIEnv *env, jclass vsclazz, jlong jKernel, jlong buffer, jint argumentNumber)) {
@@ -976,6 +1014,7 @@ static JNINativeMethod jdk_internal_vm_vector_SVMBufferSupport_methods[] = {
     {CC "Subtract",   CC "(JJJJJI)V", FN_PTR(SVMBufferSupport_subtract)},
     {CC "Multiply",   CC "(JJJJFI)V", FN_PTR(SVMBufferSupport_multiply)},
     {CC "Multiply",   CC "(JJJJJI)V", FN_PTR(SVMBufferSupport_multiplyBuffer)},
+    {CC "MultiplyRange",   CC "(JJJIJIJI)V", FN_PTR(SVMBufferSupport_multiplyRange)},
     {CC "Sqrt",   CC "(JJJJI)V", FN_PTR(SVMBufferSupport_sqrt)},
     {CC "Division",   CC "(JJJJFI)V", FN_PTR(SVMBufferSupport_division)},
     {CC "Division",   CC "(JJJJJI)V", FN_PTR(SVMBufferSupport_divisionBuffer)},
