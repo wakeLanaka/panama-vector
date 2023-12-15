@@ -1,4 +1,3 @@
-#include <iostream>
 #include "precompiled.hpp"
 #include "openclHelper.hpp"
 #define CL_TARGET_OPENCL_VERSION 300
@@ -82,7 +81,7 @@ const char *getOpenCLError(cl_int error) {
 
 void handleError(cl_int value, const char * errorString) {
   if (value != CL_SUCCESS) {
-    std::cerr << "Error[" << errorString << "]: " << getOpenCLError(value) << std::endl;
+    fatal("OpenCL Error %s(%s)", errorString, getOpenCLError(value));
   }
 }
 
