@@ -175,7 +175,7 @@ public class SVMBuffer {
      *  @param amount of elements to be multiplied
      *  @return the new SVMBuffer of size amount containing the multiplied elements
      */
-    public SVMBuffer mulRange(int index1, SVMBuffer factor, int index2, int amount,){
+    public SVMBuffer mulRange(int index1, SVMBuffer factor, int index2, int amount){
         SVMBuffer results = new SVMBuffer(info, amount);
         SVMBufferSupport.MultiplyRange(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, index1, factor.svmBuffer, index2, results.svmBuffer, amount);
         return results;
