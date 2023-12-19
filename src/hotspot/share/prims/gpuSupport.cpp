@@ -6,8 +6,6 @@
 #include "CL/cl.h"
 #include "gc/x/xUtils.hpp"
 #include "openclHelper.hpp"
-#include <iostream>
-#include<unistd.h>
 
 JVM_ENTRY(jlong, GPUSupport_createContext(JNIEnv *env, jclass vsclazz, jlong jDevice)) {
   cl_int error = 0;
@@ -223,7 +221,6 @@ JVM_ENTRY(void, GPUSupport_gpuAdditionHostPtr(JNIEnv *env, jclass vsclazz, jintA
   env->ReleaseIntArrayElements(c, cbuf, 0);
   // error = clEnqueueUnmapMemObject(command_queue, c_mem_obj, mappedBuffer, 0, NULL, NULL);
   // handleError(error, "UnmapBuffer");
-  std::cout << "kernel: " << g_NDRangePureExecTimeMs << std::endl;
 
   clReleaseMemObject(a_mem_obj);
   clReleaseMemObject(b_mem_obj);

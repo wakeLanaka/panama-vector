@@ -27,15 +27,23 @@ public class SVMBufferSupport {
 
     public static native long CreateReadWriteFloatSVMBuffer(long jContext, int length);
 
+    public static native long CreateReadWriteIntSVMBuffer(long jContext, int length);
+
     public static native long CopyFromArray(long jContext, long jCommandQueue, int[] jArray);
 
     public static native long CopyFromArray(long jContext, long jCommandQueue, float[] jArray);
+
+    public static native long Fill(long jContext, long jCommandQueue, long b1, float[] jArray);
+
+    public static native long Fill(long jContext, long jCommandQueue, long b1, int[] jArray);
 
     public static native void CopyToArray(long jContext, long jCommandQueue, long jBuffer, int[] jArray);
 
     public static native void CopyToArray(long jContext, long jCommandQueue, long jBuffer, float[] jArray);
 
     public static native void ReleaseSVMBuffer(long jContext, long jCommandQueue, long jBuffer);
+
+    public static native void ReleaseSVMBufferInt(long jContext, long jCommandQueue, long jBuffer);
 
     public static native void AddSVMBuffer(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, long jBuffer3, int length);
 
@@ -52,6 +60,8 @@ public class SVMBufferSupport {
     public static native void Multiply(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, float jFactor, int length);
 
     public static native void Multiply(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, long jBuffer3, int length);
+
+    public static native void MultiplyInt(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, long jBuffer3, int length);
 
     public static native void Sqrt(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, int length);
 
@@ -92,4 +102,12 @@ public class SVMBufferSupport {
     public static native void SetKernelArgument(long jKernel, int value, int argumentNumber);
 
     public static native void SetKernelArgument(long jKernel, float value, int argumentNumber);
+
+    public static native void Repeat1(long jProgram, long jCommandQueue, long b1, long b2, int repetition, int length);
+
+    public static native void Repeat2(long jProgram, long jCommandQueue, long b1, long b2, int repetition, int length);
+
+    public static native void Ashr(long jProgram, long jCommandQueue, long b1, long b2, int amount, int length);
+
+    public static native void And(long jProgram, long jCommandQueue, long b1, long b2, int value, int length);
 }

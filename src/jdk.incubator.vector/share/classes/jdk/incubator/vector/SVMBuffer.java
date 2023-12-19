@@ -41,6 +41,52 @@ public class SVMBuffer {
         this.svmBuffer = SVMBufferSupport.CreateReadWriteFloatSVMBuffer(info.GetContext(), length);
     }
 
+    private SVMBuffer(GPUInformation info, int length, int a) {
+        this.info = info;
+        this.length = length;
+        this.svmBuffer = SVMBufferSupport.CreateReadWriteIntSVMBuffer(info.GetContext(), length);
+    }
+
+    /**
+     *  TODO
+     *  @param array TODO
+     *  @return TODO
+     */
+    public SVMBuffer fill(float[] array){
+        SVMBufferSupport.Fill(info.GetContext(), info.GetCommandQueue(), this.svmBuffer, array);
+        return this;
+    }
+
+    /**
+     *  TODO
+     *  @param array TODO
+     *  @return TODO
+     */
+    public SVMBuffer fill(int[] array){
+        SVMBufferSupport.Fill(info.GetContext(), info.GetCommandQueue(), this.svmBuffer, array);
+        return this;
+    }
+
+    /**
+     *  Loads a SVMBuffer from an array of type {@code float[]}
+     *  @param info for the gpu
+     *  @param length the array
+     *  @return the SVMBuffer loaded from the array
+     */
+    public static SVMBuffer zero(GPUInformation info, int length) {
+        return new SVMBuffer(info, length);
+    }
+
+    /**
+     *  Loads a SVMBuffer from an array of type {@code int[]}
+     *  @param info for the gpu
+     *  @param length the array
+     *  @return the SVMBuffer loaded from the array
+     */
+    public static SVMBuffer zeroInt(GPUInformation info, int length) {
+        return new SVMBuffer(info, length, 0);
+    }
+
     /**
      *  Loads a SVMBuffer from an array of type {@code float[]}
      *  @param info for the gpu
@@ -78,6 +124,7 @@ public class SVMBuffer {
         SVMBufferSupport.MatrixFmaSVMBuffer(this.info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, factor.svmBuffer, summand.svmBuffer, m, n, k, summand.length);
         return summand;
     }
+
 
     /**
      *  Fused multiply-add (FMA) of SVMBuffers.
@@ -203,6 +250,16 @@ public class SVMBuffer {
         SVMBufferSupport.Multiply(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, factors.svmBuffer, results.svmBuffer, this.length);
 
         return results;
+    }
+
+    /**
+     *  Multiplies this SVMBuffer with the factors SVMBuffer
+     *  @param factors of the multiplication
+     *  @return the multiplied SVMBuffer
+     */
+    public SVMBuffer mulInPlaceInt(SVMBuffer factors){
+        SVMBufferSupport.MultiplyInt(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, factors.svmBuffer, this.svmBuffer, this.length);
+        return this;
     }
 
     /**
@@ -405,6 +462,29 @@ public class SVMBuffer {
     }
 
     /**
+     *  TODO
+     *  @param repetition TODO
+     *  @return TODO
+     */
+    public SVMBuffer repeat1(int repetition){
+        SVMBuffer results = new SVMBuffer(info, length * repetition);
+        SVMBufferSupport.Repeat1(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, results.svmBuffer, repetition, length);
+        return results;
+    }
+
+    /**
+     *  TODO
+     *  @param repetition TODO
+     *  @return TODO
+     */
+    public SVMBuffer repeat2(int repetition){
+        SVMBuffer results = new SVMBuffer(info, length * repetition);
+        SVMBufferSupport.Repeat2(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, results.svmBuffer, repetition, length);
+        return results;
+    }
+
+
+    /**
      *  Stores this SVMBuffer into an Array of type {@code int[]}
      *  @param array the array of type {@code int[]}
      */
@@ -425,6 +505,14 @@ public class SVMBuffer {
      */
     public void releaseSVMBuffer() {
         SVMBufferSupport.ReleaseSVMBuffer(info.GetContext(), info.GetCommandQueue(), this.svmBuffer);
+        this.svmBuffer = 0;
+    }
+
+    /**
+     *  Deallocates the Memory of this SVMBuffer
+     */
+    public void releaseSVMBufferInt() {
+        SVMBufferSupport.ReleaseSVMBufferInt(info.GetContext(), info.GetCommandQueue(), this.svmBuffer);
         this.svmBuffer = 0;
     }
 
@@ -460,6 +548,27 @@ public class SVMBuffer {
     public SVMBuffer blendInPlace(SVMBuffer comparee, SVMBuffer mask){
         SVMBufferSupport.Blend(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, comparee.svmBuffer, mask.svmBuffer, this.svmBuffer, this.length);
         return this;
+    }
+
+    /**
+     *  TODO
+     *  @param amount TODO
+     *  @return TODO
+     */
+    public SVMBuffer ashrInPlace(int amount) {
+        SVMBufferSupport.Ashr(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, this.svmBuffer, amount, this.length);
+        return this;
+    }
+
+    /**
+     *  TODO
+     *  @param value TODO
+     *  @return TODO
+     */
+    public SVMBuffer and(int value){
+        SVMBuffer results = new SVMBuffer(info, length);
+        SVMBufferSupport.And(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, results.svmBuffer, value, this.length);
+        return results;
     }
 
     /**
