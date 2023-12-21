@@ -244,16 +244,7 @@ JVM_ENTRY(jfloat, SVMBufferSupport_sumReduce(JNIEnv *env, jclass vsclazz, jlong 
   error = clSetKernelArgSVMPointer(kernel, 1, sums);
   handleError(error, "clSetKernelArg");
 
-  cl_mem c_mem_obj = clCreateBuffer(clContext, CL_MEM_READ_WRITE, sizeof(float), NULL, &error);
-  handleError(error, "createBuffer");
-
-  error = clSetKernelArg(kernel, 2, sizeof(cl_mem), &c_mem_obj);
-  handleError(error, "setArgs");
-
-  error = clSetKernelArg(kernel, 3, sizeof(int), &clLength);
-  handleError(error, "clSetKernelArg");
-
-  error = clSetKernelArg(kernel, 4, sizeof(float) * localSize, NULL);
+  error = clSetKernelArg(kernel, 2, sizeof(float) * localSize, NULL);
   handleError(error, "clSetKernelArg");
 
   size_t local_item_size[] = {(size_t)localSize};
@@ -263,13 +254,21 @@ JVM_ENTRY(jfloat, SVMBufferSupport_sumReduce(JNIEnv *env, jclass vsclazz, jlong 
                          global_item_size, local_item_size, 0, NULL, NULL);
   handleError(error, "clEnqueueNDRangeKernel");
 
-  float sum = 0;
-  clEnqueueReadBuffer(clCommandQueue, c_mem_obj, CL_TRUE, 0, sizeof(float), &sum, 0, NULL, NULL);
+  error = clEnqueueSVMMap(clCommandQueue, CL_TRUE, CL_MAP_READ, sums, sizeof(float) * workGroups, 0, 0, NULL);
+  handleError(error, "clEnqueueSVMMap");
+  float jarrayElements[workGroups];
+  clEnqueueSVMMemcpy(clCommandQueue, CL_TRUE, jarrayElements, sums, sizeof(float) * workGroups, 0, 0, 0);
+  error = clEnqueueSVMUnmap(clCommandQueue, sums, 0, 0, NULL);
+  handleError(error, "clEnqueueSVMUnmap");
+
+  float sum = 0.0f;
+  for(size_t i = 0; i < workGroups; i++) {
+    sum += jarrayElements[i];
+  }
 
   clReleaseKernel(kernel);
-  clReleaseMemObject(c_mem_obj);
   clSVMFree(clContext, sums);
-  return sum;
+  return (jfloat)sum;
 } JVM_END
 
 JVM_ENTRY(jlong, SVMBufferSupport_copyFromArray(JNIEnv *env, jclass vsclazz, jlong jContext, jlong jCommandQueue, jintArray jArray)) {
@@ -541,7 +540,7 @@ JVM_ENTRY(void, SVMBufferSupport_multiplyBufferInt(JNIEnv *env, jclass vsclazz, 
   cl_kernel kernel = clCreateKernel(clProgram, "vector_multiplyInt", &error);
   handleError(error, "clCreateKernel");
 
-  error = clSetKernelArgSVMPointer(kernel, 0, clBuffer1);
+  error = clSetKernelArgSVMPointer(kernel, 1, clBuffer1);
   handleError(error, "clSetKernelArg");
 
   error = clSetKernelArgSVMPointer(kernel, 1, clBuffer2);
@@ -1203,6 +1202,48 @@ JVM_ENTRY(void, SVMBufferSupport_and(JNIEnv *env, jclass vsclazz, jlong jProgram
   clReleaseKernel(kernel);
 } JVM_END
 
+JVM_ENTRY(void, SVMBufferSupport_multiplyArea(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jCommandQueue, jlong b1, jlong b2, jlong b3, jint offset, jint thisWidth, jint factorWidth, jint length)) {
+  cl_int error = 0;
+  cl_program clProgram = (cl_program)jProgram;
+  cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
+  int* clBuffer1 = (int *)b1;
+  float* clBuffer2 = (float *)b2;
+  float* clBuffer3 = (float *)b3;
+  int clOffset = (int)offset;
+  int clThisWidth = (int)thisWidth;
+  int clFactorWidth = (int)factorWidth;
+  int clLength = (int)length;
+
+  cl_kernel kernel = clCreateKernel(clProgram, "multArea", &error);
+  handleError(error, "clCreateKernel");
+
+  error = clSetKernelArgSVMPointer(kernel, 0, clBuffer1);
+  handleError(error, "clSetKernelArg");
+
+  error = clSetKernelArgSVMPointer(kernel, 1, clBuffer2);
+  handleError(error, "clSetKernelArg");
+
+  error = clSetKernelArgSVMPointer(kernel, 2, clBuffer3);
+  handleError(error, "clSetKernelArg");
+
+  error = clSetKernelArg(kernel, 3, sizeof(int), &clOffset);
+  handleError(error, "clSetKernelArg");
+
+  error = clSetKernelArg(kernel, 4, sizeof(int), &clThisWidth);
+  handleError(error, "clSetKernelArg");
+
+  error = clSetKernelArg(kernel, 5, sizeof(int), &clFactorWidth);
+  handleError(error, "clSetKernelArg");
+
+  size_t global_item_size[] = {(size_t)clLength};
+
+  error = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
+                         global_item_size, NULL, 0, NULL, NULL);
+  handleError(error, "clEnqueueNDRangeKernel");
+
+  clReleaseKernel(kernel);
+} JVM_END
+
 #define CC (char*)  /*cast a literal from (const char*)*/
 #define FN_PTR(f) CAST_FROM_FN_PTR(void*, &f)
 
@@ -1259,6 +1300,7 @@ static JNINativeMethod jdk_internal_vm_vector_SVMBufferSupport_methods[] = {
     {CC "Repeat2",   CC "(JJJJII)V", FN_PTR(SVMBufferSupport_repeat2)},
     {CC "Ashr",   CC "(JJJJII)V", FN_PTR(SVMBufferSupport_ashr)},
     {CC "And",   CC "(JJJJII)V", FN_PTR(SVMBufferSupport_and)},
+    {CC "MultiplyArea",   CC "(JJJJJIIII)V", FN_PTR(SVMBufferSupport_multiplyArea)},
 };
 
 JVM_ENTRY(void, JVM_RegisterSVMBufferSupportMethods(JNIEnv* env, jclass vsclass)) {

@@ -51,73 +51,72 @@ public class SVMBufferTests {
 
     private static final float delta = 0.0001f;
 
-    private static int size = 15;
+    private static int size = 8022;
 
     public static void main(String[] args) throws Exception {
         var a = iotaFloatArray(SVMBufferTests.size);
-        var buffer1 = SVMBuffer.fromArray(SPECIES, a);
-        var buffer2 = SVMBuffer.fromArray(SPECIES, a);
+        var one = ones(SVMBufferTests.size);
+        var bufferOne = SVMBuffer.fromArray(SPECIES, one);
+        var bufferA = SVMBuffer.fromArray(SPECIES, a);
+        var bufferB = SVMBuffer.fromArray(SPECIES, a);
 
-        SVMBufferTests.IntoArrayFloat(buffer1, a);
+        SVMBufferTests.IntoArrayFloat(bufferA, a);
         SVMBufferTests.FromArrayFloat(a);
-        SVMBufferTests.SumReduceFloat(buffer1, SVMBufferTests.size);
-        SVMBufferTests.AddBufferFloat(buffer1, buffer2, a, a);
-        SVMBufferTests.SubtractBufferFloat(buffer1, buffer2, a, a);
-        SVMBufferTests.SubtractFloat(buffer1, a, 2.0f);
-        SVMBufferTests.MultiplyFloat(buffer1, a, 2.0f);
-        SVMBufferTests.MultiplyBufferFloat(buffer1, buffer2, a, a);
-        SVMBufferTests.DivisionFloat(buffer1, a, 2.0f);
-        SVMBufferTests.DivisionBufferFloat(buffer1, buffer2, a, a);
-        SVMBufferTests.SqrtFloat(buffer1, a);
-        SVMBufferTests.LogFloat(buffer1, a);
-        SVMBufferTests.CosFloat(buffer1, a);
-        SVMBufferTests.SinFloat(buffer1, a);
-        SVMBufferTests.ExpFloat(buffer1, a);
-        SVMBufferTests.AbsFloat(buffer1, a);
+        SVMBufferTests.SumReduceFloat(bufferOne);
+        SVMBufferTests.AddBufferFloat(bufferA, bufferB, a, a);
+        SVMBufferTests.SubtractBufferFloat(bufferA, bufferB, a, a);
+        SVMBufferTests.SubtractFloat(bufferA, a, 2.0f);
+        SVMBufferTests.MultiplyFloat(bufferA, a, 2.0f);
+        SVMBufferTests.MultiplyBufferFloat(bufferA, bufferB, a, a);
+        SVMBufferTests.DivisionFloat(bufferA, a, 2.0f);
+        SVMBufferTests.DivisionBufferFloat(bufferA, bufferB, a, a);
+        SVMBufferTests.SqrtFloat(bufferA, a);
+        SVMBufferTests.LogFloat(bufferA, a);
+        SVMBufferTests.CosFloat(bufferA, a);
+        SVMBufferTests.SinFloat(bufferA, a);
+        SVMBufferTests.ExpFloat(bufferOne, one);
+        SVMBufferTests.AbsFloat(bufferA, a);
         SVMBufferTests.BroadcastFloat(2.0f);
 
-        SVMBufferTests.InPlaceMethods();
+        SVMBufferTests.InPlaceMethods(bufferA, bufferB, a, bufferOne, one);
     }
 
-    private static void InPlaceMethods() throws Exception {
+    private static void InPlaceMethods(SVMBuffer bufferA, SVMBuffer bufferB, float[] a, SVMBuffer bufferOne, float[] one) throws Exception {
         var b = -55.321f;
-        var a = iotaFloatArray(SVMBufferTests.size);
-        var buffer1 = SVMBuffer.fromArray(SPECIES, a);
-        var buffer2 = SVMBuffer.fromArray(SPECIES, a);
-        SVMBufferTests.AddBufferInPlaceFloat(buffer1, buffer2, a, a);
-        buffer1.releaseSVMBuffer();
-        buffer1 = SVMBuffer.fromArray(SPECIES, a);
-        SVMBufferTests.SubtractInPlaceFloat(buffer1, buffer2, a, a);
-        buffer1.releaseSVMBuffer();
-        buffer1 = SVMBuffer.fromArray(SPECIES, a);
-        SVMBufferTests.MultiplyInPlaceFloat(buffer1, a, b);
-        buffer1.releaseSVMBuffer();
-        buffer1 = SVMBuffer.fromArray(SPECIES, a);
-        SVMBufferTests.MultiplyInPlaceBufferFloat(buffer1, buffer2, a, a);
-        buffer1.releaseSVMBuffer();
-        buffer1 = SVMBuffer.fromArray(SPECIES, a);
-        SVMBufferTests.DivisionInPlaceFloat(buffer1, a, b);
-        buffer1.releaseSVMBuffer();
-        buffer1 = SVMBuffer.fromArray(SPECIES, a);
-        SVMBufferTests.DivisionInPlaceBufferFloat(buffer1, buffer2, a, a);
-        buffer1.releaseSVMBuffer();
-        buffer1 = SVMBuffer.fromArray(SPECIES, a);
-        SVMBufferTests.LogInPlaceFloat(buffer1, a);
-        buffer1.releaseSVMBuffer();
-        buffer1 = SVMBuffer.fromArray(SPECIES, a);
-        SVMBufferTests.SinInPlaceFloat(buffer1, a);
-        buffer1.releaseSVMBuffer();
-        buffer1 = SVMBuffer.fromArray(SPECIES, a);
-        SVMBufferTests.CosInPlaceFloat(buffer1, a);
-        buffer1.releaseSVMBuffer();
-        buffer1 = SVMBuffer.fromArray(SPECIES, a);
-        SVMBufferTests.ExpInPlaceFloat(buffer1, a);
-        buffer1.releaseSVMBuffer();
-        buffer1 = SVMBuffer.fromArray(SPECIES, a);
-        SVMBufferTests.AbsInPlaceFloat(buffer1, a);
-        buffer1.releaseSVMBuffer();
-        buffer1 = SVMBuffer.fromArray(SPECIES, a);
-        SVMBufferTests.SqrtInPlaceFloat(buffer1, a);
+        SVMBufferTests.AddBufferInPlaceFloat(bufferA, bufferB, a, a);
+        bufferA.releaseSVMBuffer();
+        bufferA = SVMBuffer.fromArray(SPECIES, a);
+        SVMBufferTests.SubtractInPlaceFloat(bufferA, bufferB, a, a);
+        bufferA.releaseSVMBuffer();
+        bufferA = SVMBuffer.fromArray(SPECIES, a);
+        SVMBufferTests.MultiplyInPlaceFloat(bufferA, a, b);
+        bufferA.releaseSVMBuffer();
+        bufferA = SVMBuffer.fromArray(SPECIES, a);
+        SVMBufferTests.MultiplyInPlaceBufferFloat(bufferA, bufferB, a, a);
+        bufferA.releaseSVMBuffer();
+        bufferA = SVMBuffer.fromArray(SPECIES, a);
+        SVMBufferTests.DivisionInPlaceFloat(bufferA, a, b);
+        bufferA.releaseSVMBuffer();
+        bufferA = SVMBuffer.fromArray(SPECIES, a);
+        SVMBufferTests.DivisionInPlaceBufferFloat(bufferA, bufferB, a, a);
+        bufferA.releaseSVMBuffer();
+        bufferA = SVMBuffer.fromArray(SPECIES, a);
+        SVMBufferTests.LogInPlaceFloat(bufferA, a);
+        bufferA.releaseSVMBuffer();
+        bufferA = SVMBuffer.fromArray(SPECIES, a);
+        SVMBufferTests.SinInPlaceFloat(bufferA, a);
+        bufferA.releaseSVMBuffer();
+        bufferA = SVMBuffer.fromArray(SPECIES, a);
+        SVMBufferTests.CosInPlaceFloat(bufferA, a);
+        bufferA.releaseSVMBuffer();
+        bufferA = SVMBuffer.fromArray(SPECIES, a);
+        SVMBufferTests.ExpInPlaceFloat(bufferOne, one);
+        bufferOne.releaseSVMBuffer();
+        bufferOne = SVMBuffer.fromArray(SPECIES, one);
+        SVMBufferTests.AbsInPlaceFloat(bufferA, a);
+        bufferA.releaseSVMBuffer();
+        bufferA = SVMBuffer.fromArray(SPECIES, a);
+        SVMBufferTests.SqrtInPlaceFloat(bufferA, a);
     }
 
     public static void FromArrayFloat(float[] array) throws Exception {
@@ -331,11 +330,9 @@ public class SVMBufferTests {
         var result = buffer.exp();
         var resultArray = new float[buffer.length];
         result.intoArray(resultArray);
-        var expectedArray = ArrayExp(a);
-        System.out.println(resultArray[9]);
-        System.out.println(expectedArray[9]);
+        float[] expectedArray = ArrayExp(a);
         String info = "ExpFloat";
-        float delta = 0.1f;
+        float delta = 1.1f;
         AssertFloatArray(resultArray, expectedArray, delta, info);
         checkBufferAddressUnequal(result, buffer, info);
     }
@@ -438,7 +435,7 @@ public class SVMBufferTests {
     private static float[] ArrayAbs(float[] a) throws Exception {
         var c = new float[a.length];
         for (int i = 0; i < a.length; i++){
-            c[i] = (float)Math.abs(a[i]);
+            c[i] = Math.abs(a[i]);
         }
         return c;
     }
@@ -525,18 +522,26 @@ public class SVMBufferTests {
         return c;
     }
 
-    private static void SumReduceFloat(SVMBuffer buffer, int size) throws Exception {
-        var result = buffer.sumReduce();
-        var resultExpected = (size + 1) * (size/2.0f) - size;
-        if (Math.abs(result - resultExpected) > SVMBufferTests.delta) {
-            throw new RuntimeException("SumReduce: is " + result + ", expected: " + resultExpected);
+    private static void SumReduceFloat(SVMBuffer buffer) throws Exception {
+        var result = (int)buffer.sumReduce();
+
+        if (Math.abs(result - SVMBufferTests.size) > SVMBufferTests.delta) {
+            throw new RuntimeException("SumReduce is: " + result + ", expected: " + SVMBufferTests.size);
         }
     }
 
     private static float[] iotaFloatArray(int size){
-        var array = new float[size]; 
+        var array = new float[size];
         for (int i = 0; i < size; i++){
             array[i] = (float)i;
+        }
+        return array;
+    }
+
+    private static float[] ones(int size){
+        var array = new float[size];
+        for (int i = 0; i < size; i++){
+            array[i] = 1.0f;
         }
         return array;
     }

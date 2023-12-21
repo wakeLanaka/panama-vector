@@ -110,4 +110,6 @@ public class SVMBufferSupport {
     public static native void Ashr(long jProgram, long jCommandQueue, long b1, long b2, int amount, int length);
 
     public static native void And(long jProgram, long jCommandQueue, long b1, long b2, int value, int length);
+
+    public static native void MultiplyArea(long jProgram, long jCommandQueue, long b1, long b2, long b3, int offset, int thisWidth, int factorWidth, int length);
 }

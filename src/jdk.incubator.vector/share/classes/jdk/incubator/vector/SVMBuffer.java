@@ -41,16 +41,10 @@ public class SVMBuffer {
         this.svmBuffer = SVMBufferSupport.CreateReadWriteFloatSVMBuffer(info.GetContext(), length);
     }
 
-    private SVMBuffer(GPUInformation info, int length, int a) {
-        this.info = info;
-        this.length = length;
-        this.svmBuffer = SVMBufferSupport.CreateReadWriteIntSVMBuffer(info.GetContext(), length);
-    }
-
     /**
-     *  TODO
-     *  @param array TODO
-     *  @return TODO
+     *  Fills this buffer with the the array elements
+     *  @param array of elements to be copied to SVMBuffer
+     *  @return this Filled SVMBuffer
      */
     public SVMBuffer fill(float[] array){
         SVMBufferSupport.Fill(info.GetContext(), info.GetCommandQueue(), this.svmBuffer, array);
@@ -58,9 +52,9 @@ public class SVMBuffer {
     }
 
     /**
-     *  TODO
-     *  @param array TODO
-     *  @return TODO
+     *  Fills this buffer with the the array elements
+     *  @param array of elements to be copied to SVMBuffer
+     *  @return this Filled SVMBuffer
      */
     public SVMBuffer fill(int[] array){
         SVMBufferSupport.Fill(info.GetContext(), info.GetCommandQueue(), this.svmBuffer, array);
@@ -94,6 +88,16 @@ public class SVMBuffer {
      *  @return the SVMBuffer loaded from the array
      */
     public static SVMBuffer fromArray(GPUInformation info, float[] array) {
+        return new SVMBuffer(info, array);
+    }
+
+    /**
+     *  Loads a SVMBuffer from an array of type {@code float[]}
+     *  @param info for the gpu
+     *  @param array the array
+     *  @return the SVMBuffer loaded from the array
+     */
+    public static SVMBuffer fromArray(GPUInformation info, int[] array) {
         return new SVMBuffer(info, array);
     }
 
@@ -215,6 +219,20 @@ public class SVMBuffer {
     }
 
     /**
+     *  Multiplies an rectangular area of this SVMBuffer with the facotr SVMBuffer
+     *  @param factor to be multiplied with this SVMBuffer
+     *  @param offset is the top left element of this SVMBuffer of the rectangular area
+     *  @param thisWidth width of the matrix of this SVMBuffer
+     *  @param factorWidth width of the matrix of the factor SVMBuffer
+     *  @return new SVMBuffer with the results. (Length == factor.length)
+     */
+    public SVMBuffer mulArea(SVMBuffer factor, int offset, int thisWidth, int factorWidth) {
+        SVMBuffer results = new SVMBuffer(info, factor.length);
+        SVMBufferSupport.MultiplyArea(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, factor.svmBuffer, results.svmBuffer, offset, thisWidth, factorWidth, factor.length);
+        return results;
+    }
+
+    /**
      *  Multiplies range of this SVMBuffer with range of factor
      *  @param index1 start index of this SVMBuffer
      *  @param factor of the multiplication
@@ -257,7 +275,8 @@ public class SVMBuffer {
      *  @param factors of the multiplication
      *  @return the multiplied SVMBuffer
      */
-    public SVMBuffer mulInPlaceInt(SVMBuffer factors){
+    public SVMBuffer mulInt(SVMBuffer factors){
+        SVMBuffer results = new SVMBuffer(info, length);
         SVMBufferSupport.MultiplyInt(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, factors.svmBuffer, this.svmBuffer, this.length);
         return this;
     }
@@ -551,9 +570,9 @@ public class SVMBuffer {
     }
 
     /**
-     *  TODO
-     *  @param amount TODO
-     *  @return TODO
+     *  Logical rightshift of this SVMBuffer
+     *  @param amount to be shifted
+     *  @return this SVMBuffer
      */
     public SVMBuffer ashrInPlace(int amount) {
         SVMBufferSupport.Ashr(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, this.svmBuffer, amount, this.length);
@@ -561,9 +580,9 @@ public class SVMBuffer {
     }
 
     /**
-     *  TODO
-     *  @param value TODO
-     *  @return TODO
+     *  Bitwise and of this SVMBuffer
+     *  @param value for the bitwise and
+     *  @return this SVMBuffer
      */
     public SVMBuffer and(int value){
         SVMBuffer results = new SVMBuffer(info, length);
