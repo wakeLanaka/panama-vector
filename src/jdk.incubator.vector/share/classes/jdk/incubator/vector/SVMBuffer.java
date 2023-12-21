@@ -71,15 +71,15 @@ public class SVMBuffer {
         return new SVMBuffer(info, length);
     }
 
-    /**
-     *  Loads a SVMBuffer from an array of type {@code int[]}
-     *  @param info for the gpu
-     *  @param length the array
-     *  @return the SVMBuffer loaded from the array
-     */
-    public static SVMBuffer zeroInt(GPUInformation info, int length) {
-        return new SVMBuffer(info, length, 0);
-    }
+    // /**
+    //  *  Loads a SVMBuffer from an array of type {@code int[]}
+    //  *  @param info for the gpu
+    //  *  @param length the array
+    //  *  @return the SVMBuffer loaded from the array
+    //  */
+    // public static SVMBuffer zeroInt(GPUInformation info, int length) {
+    //     return new SVMBuffer(info, length, 0);
+    // }
 
     /**
      *  Loads a SVMBuffer from an array of type {@code float[]}
