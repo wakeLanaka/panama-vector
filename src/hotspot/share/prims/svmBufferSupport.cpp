@@ -231,7 +231,7 @@ JVM_ENTRY(jfloat, SVMBufferSupport_sumReduce(JNIEnv *env, jclass vsclazz, jlong 
   const int clLength = (int)length;
   const int localSize = (int)maxWorkGroupSize;
 
-  const size_t workGroups = (size_t)std::ceil(clLength / (float)localSize);
+  const jsize workGroups = (jsize)std::ceil(clLength / (float)localSize);
   float* sums = (float * )clSVMAlloc(clContext, CL_MEM_READ_WRITE, sizeof(float) * workGroups, 0);
 
   const cl_kernel kernel = clCreateKernel(clProgram, "sumreduce", &error);
@@ -262,7 +262,7 @@ JVM_ENTRY(jfloat, SVMBufferSupport_sumReduce(JNIEnv *env, jclass vsclazz, jlong 
   handleError(error, "clEnqueueSVMUnmap");
 
   float sum = 0.0f;
-  for(size_t i = 0; i < workGroups; i++) {
+  for(jsize i = 0; i < workGroups; i++) {
     sum += (float)jsums[i];
   }
 
