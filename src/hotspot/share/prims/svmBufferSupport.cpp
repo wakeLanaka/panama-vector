@@ -469,16 +469,11 @@ JVM_ENTRY(void, SVMBufferSupport_subtractMinuend(JNIEnv *env, jclass vsclazz, jl
   clReleaseKernel(kernel);
 } JVM_END
 
-JVM_ENTRY(void, SVMBufferSupport_multiply(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jCommandQueue, jlong jBuffer1, jlong jBuffer2, jfloat jFactor, jint length)) {
+template<typename T1, typename T2, typename T3>
+void executeMultiply(cl_program clProgram, cl_command_queue clCommandQueue, T1 clBuffer1, T2 clBuffer2, const T3 clFactor, int clLength, const char * kernelName){
   cl_int error = 0;
-  const cl_program clProgram = (cl_program)jProgram;
-  const cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
-  float* clBuffer1 = (float *)jBuffer1;
-  float* clBuffer2 = (float *)jBuffer2;
-  float clFactor = (float)jFactor;
-  const int clLength = (int)length;
 
-  const cl_kernel kernel = clCreateKernel(clProgram, "multiply", &error);
+  const cl_kernel kernel = clCreateKernel(clProgram, kernelName, &error);
   handleError(error, "clCreateKernel");
 
   error = clSetKernelArgSVMPointer(kernel, 0, clBuffer1);
@@ -487,7 +482,7 @@ JVM_ENTRY(void, SVMBufferSupport_multiply(JNIEnv *env, jclass vsclazz, jlong jPr
   error = clSetKernelArgSVMPointer(kernel, 1, clBuffer2);
   handleError(error, "clSetKernelArg");
 
-  error = clSetKernelArg(kernel, 2, sizeof(float), &clFactor);
+  error = clSetKernelArg(kernel, 2, sizeof(T3), &clFactor);
   handleError(error, "clSetKernelArg");
 
   size_t global_item_size[] = {(size_t)clLength};
@@ -497,6 +492,50 @@ JVM_ENTRY(void, SVMBufferSupport_multiply(JNIEnv *env, jclass vsclazz, jlong jPr
   handleError(error, "clEnqueueNDRangeKernel");
 
   clReleaseKernel(kernel);
+}
+
+JVM_ENTRY(void, SVMBufferSupport_multiplyFFF(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jCommandQueue, jlong jBuffer1, jlong jBuffer2, jfloat jFactor, jint length)) {
+  const cl_program clProgram = (cl_program)jProgram;
+  const cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
+  jfloat* clBuffer1 = (jfloat *)jBuffer1;
+  jfloat* clBuffer2 = (jfloat *)jBuffer2;
+  const jfloat clFactor = (jfloat)jFactor;
+  const jint clLength = (jint)length;
+
+  executeMultiply(clProgram, clCommandQueue, clBuffer1, clBuffer2, clFactor, clLength, "multiplyFF");
+} JVM_END
+
+JVM_ENTRY(void, SVMBufferSupport_multiplyIFF(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jCommandQueue, jlong jBuffer1, jlong jBuffer2, jfloat jFactor, jint length)) {
+  const cl_program clProgram = (cl_program)jProgram;
+  const cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
+  jint* clBuffer1 = (jint *)jBuffer1;
+  jfloat* clBuffer2 = (jfloat *)jBuffer2;
+  const jfloat clFactor = (jfloat)jFactor;
+  const jint clLength = (jint)length;
+
+  executeMultiply(clProgram, clCommandQueue, clBuffer1, clBuffer2, clFactor, clLength, "multiplyIF");
+} JVM_END
+
+JVM_ENTRY(void, SVMBufferSupport_multiplyIII(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jCommandQueue, jlong jBuffer1, jlong jBuffer2, jint jFactor, jint length)) {
+  const cl_program clProgram = (cl_program)jProgram;
+  const cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
+  jint* clBuffer1 = (jint *)jBuffer1;
+  jint* clBuffer2 = (jint *)jBuffer2;
+  const jint clFactor = (jint)jFactor;
+  const jint clLength = (jint)length;
+
+  executeMultiply(clProgram, clCommandQueue, clBuffer1, clBuffer2, clFactor, clLength, "multiplyIII");
+} JVM_END
+
+JVM_ENTRY(void, SVMBufferSupport_multiplyFFI(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jCommandQueue, jlong jBuffer1, jlong jBuffer2, jint jFactor, jint length)) {
+  const cl_program clProgram = (cl_program)jProgram;
+  const cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
+  jfloat* clBuffer1 = (jfloat *)jBuffer1;
+  jfloat* clBuffer2 = (jfloat *)jBuffer2;
+  const jint clFactor = (jint)jFactor;
+  const jint clLength = (jint)length;
+
+  executeMultiply(clProgram, clCommandQueue, clBuffer1, clBuffer2, clFactor, clLength, "multiplyFFI");
 } JVM_END
 
 JVM_ENTRY(void, SVMBufferSupport_multiplyBuffer(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jCommandQueue, jlong jBuffer1, jlong jBuffer2, jlong jBuffer3, jint length)) {
@@ -533,15 +572,15 @@ JVM_ENTRY(void, SVMBufferSupport_multiplyBufferInt(JNIEnv *env, jclass vsclazz, 
   cl_int error = 0;
   const cl_program clProgram = (cl_program)jProgram;
   const cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
-  float* clBuffer1 = (float *)jBuffer1;
-  int* clBuffer2 = (int *)jBuffer2;
+  int* clBuffer1 = (int *)jBuffer1;
+  float* clBuffer2 = (float *)jBuffer2;
   float* clBuffer3 = (float *)jBuffer3;
   const int clLength = (int)length;
 
   const cl_kernel kernel = clCreateKernel(clProgram, "vector_multiplyInt", &error);
   handleError(error, "clCreateKernel");
 
-  error = clSetKernelArgSVMPointer(kernel, 1, clBuffer1);
+  error = clSetKernelArgSVMPointer(kernel, 0, clBuffer1);
   handleError(error, "clSetKernelArg");
 
   error = clSetKernelArgSVMPointer(kernel, 1, clBuffer2);
@@ -1147,8 +1186,8 @@ JVM_ENTRY(void, SVMBufferSupport_ashr(JNIEnv *env, jclass vsclazz, jlong jProgra
   cl_int error = 0;
   const cl_program clProgram = (cl_program)jProgram;
   const cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
-  float* clBuffer1 = (float *)b1;
-  float* clBuffer2 = (float *)b2;
+  int* clBuffer1 = (int *)b1;
+  int* clBuffer2 = (int *)b2;
   const int clAmount = (int)amount;
   const int clLength = (int)length;
 
@@ -1173,12 +1212,94 @@ JVM_ENTRY(void, SVMBufferSupport_ashr(JNIEnv *env, jclass vsclazz, jlong jProgra
   clReleaseKernel(kernel);
 } JVM_END
 
-JVM_ENTRY(void, SVMBufferSupport_and(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jCommandQueue, jlong b1, jlong b2, jint value, jint length)) {
+JVM_ENTRY(void, SVMBufferSupport_lshl(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jCommandQueue, jlong b1, jlong b2, jint amount, jint length)) {
+  cl_int error = 0;
+  const cl_program clProgram = (cl_program)jProgram;
+  const cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
+  int* clBuffer1 = (int *)b1;
+  int* clBuffer2 = (int *)b2;
+  const int clAmount = (int)amount;
+  const int clLength = (int)length;
+
+  const cl_kernel kernel = clCreateKernel(clProgram, "lshl", &error);
+  handleError(error, "clCreateKernel");
+
+  error = clSetKernelArgSVMPointer(kernel, 0, clBuffer1);
+  handleError(error, "clSetKernelArg");
+
+  error = clSetKernelArgSVMPointer(kernel, 1, clBuffer2);
+  handleError(error, "clSetKernelArg");
+
+  error = clSetKernelArg(kernel, 2, sizeof(int), &clAmount);
+  handleError(error, "clSetKernelArg");
+
+  size_t global_item_size[] = {(size_t)clLength};
+
+  error = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
+                         global_item_size, NULL, 0, NULL, NULL);
+  handleError(error, "clEnqueueNDRangeKernel");
+
+  clReleaseKernel(kernel);
+} JVM_END
+
+JVM_ENTRY(void, SVMBufferSupport_toInt(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jCommandQueue, jlong b1, jlong b2, jint length)) {
   cl_int error = 0;
   const cl_program clProgram = (cl_program)jProgram;
   const cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
   float* clBuffer1 = (float *)b1;
+  int* clBuffer2 = (int *)b2;
+  const int clLength = (int)length;
+
+  const cl_kernel kernel = clCreateKernel(clProgram, "toInt", &error);
+  handleError(error, "clCreateKernel");
+
+  error = clSetKernelArgSVMPointer(kernel, 0, clBuffer1);
+  handleError(error, "clSetKernelArg");
+
+  error = clSetKernelArgSVMPointer(kernel, 1, clBuffer2);
+  handleError(error, "clSetKernelArg");
+
+  size_t global_item_size[] = {(size_t)clLength};
+
+  error = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
+                         global_item_size, NULL, 0, NULL, NULL);
+  handleError(error, "clEnqueueNDRangeKernel");
+
+  clReleaseKernel(kernel);
+} JVM_END
+
+JVM_ENTRY(void, SVMBufferSupport_toFloat(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jCommandQueue, jlong b1, jlong b2, jint length)) {
+  cl_int error = 0;
+  const cl_program clProgram = (cl_program)jProgram;
+  const cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
+  int* clBuffer1 = (int *)b1;
   float* clBuffer2 = (float *)b2;
+  const int clLength = (int)length;
+
+  const cl_kernel kernel = clCreateKernel(clProgram, "toFloat", &error);
+  handleError(error, "clCreateKernel");
+
+  error = clSetKernelArgSVMPointer(kernel, 0, clBuffer1);
+  handleError(error, "clSetKernelArg");
+
+  error = clSetKernelArgSVMPointer(kernel, 1, clBuffer2);
+  handleError(error, "clSetKernelArg");
+
+  size_t global_item_size[] = {(size_t)clLength};
+
+  error = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
+                         global_item_size, NULL, 0, NULL, NULL);
+  handleError(error, "clEnqueueNDRangeKernel");
+
+  clReleaseKernel(kernel);
+} JVM_END
+
+JVM_ENTRY(void, SVMBufferSupport_and(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jCommandQueue, jlong b1, jlong b2, jint value, jint length)) {
+  cl_int error = 0;
+  const cl_program clProgram = (cl_program)jProgram;
+  const cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
+  int* clBuffer1 = (int *)b1;
+  int* clBuffer2 = (int *)b2;
   const int clValue = (int)value;
   const int clLength = (int)length;
 
@@ -1192,6 +1313,162 @@ JVM_ENTRY(void, SVMBufferSupport_and(JNIEnv *env, jclass vsclazz, jlong jProgram
   handleError(error, "clSetKernelArg");
 
   error = clSetKernelArg(kernel, 2, sizeof(int), &clValue);
+  handleError(error, "clSetKernelArg");
+
+  size_t global_item_size[] = {(size_t)clLength};
+
+  error = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
+                         global_item_size, NULL, 0, NULL, NULL);
+  handleError(error, "clEnqueueNDRangeKernel");
+
+  clReleaseKernel(kernel);
+} JVM_END
+
+JVM_ENTRY(void, SVMBufferSupport_or(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jCommandQueue, jlong b1, jlong b2, jlong b3, jint length)) {
+  cl_int error = 0;
+  const cl_program clProgram = (cl_program)jProgram;
+  const cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
+  int* clBuffer1 = (int *)b1;
+  int* clBuffer2 = (int *)b2;
+  int* clBuffer3 = (int *)b3;
+  const int clLength = (int)length;
+
+  const cl_kernel kernel = clCreateKernel(clProgram, "vector_bitwiseor", &error);
+  handleError(error, "clCreateKernel");
+
+  error = clSetKernelArgSVMPointer(kernel, 0, clBuffer1);
+  handleError(error, "clSetKernelArg");
+
+  error = clSetKernelArgSVMPointer(kernel, 1, clBuffer2);
+  handleError(error, "clSetKernelArg");
+
+  error = clSetKernelArgSVMPointer(kernel, 2, clBuffer3);
+  handleError(error, "clSetKernelArg");
+
+  size_t global_item_size[] = {(size_t)clLength};
+
+  error = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
+                         global_item_size, NULL, 0, NULL, NULL);
+  handleError(error, "clEnqueueNDRangeKernel");
+
+  clReleaseKernel(kernel);
+} JVM_END
+
+JVM_ENTRY(void, SVMBufferSupport_max(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jCommandQueue, jlong b1, jlong b2, jfloat value, jint length)) {
+  cl_int error = 0;
+  const cl_program clProgram = (cl_program)jProgram;
+  const cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
+  float* clBuffer1 = (float *)b1;
+  float* clBuffer2 = (float *)b2;
+  const float clValue = (float)value;
+  const int clLength = (int)length;
+
+  const cl_kernel kernel = clCreateKernel(clProgram, "vector_max", &error);
+  handleError(error, "clCreateKernel");
+
+  error = clSetKernelArgSVMPointer(kernel, 0, clBuffer1);
+  handleError(error, "clSetKernelArg");
+
+  error = clSetKernelArgSVMPointer(kernel, 1, clBuffer2);
+  handleError(error, "clSetKernelArg");
+
+  error = clSetKernelArg(kernel, 2, sizeof(float), &clValue);
+  handleError(error, "clSetKernelArg");
+
+  size_t global_item_size[] = {(size_t)clLength};
+
+  error = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
+                         global_item_size, NULL, 0, NULL, NULL);
+  handleError(error, "clEnqueueNDRangeKernel");
+
+  clReleaseKernel(kernel);
+} JVM_END
+
+JVM_ENTRY(void, SVMBufferSupport_min(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jCommandQueue, jlong b1, jlong b2, jfloat value, jint length)) {
+  cl_int error = 0;
+  const cl_program clProgram = (cl_program)jProgram;
+  const cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
+  float* clBuffer1 = (float *)b1;
+  float* clBuffer2 = (float *)b2;
+  const float clValue = (float)value;
+  const int clLength = (int)length;
+
+  const cl_kernel kernel = clCreateKernel(clProgram, "vector_min", &error);
+  handleError(error, "clCreateKernel");
+
+  error = clSetKernelArgSVMPointer(kernel, 0, clBuffer1);
+  handleError(error, "clSetKernelArg");
+
+  error = clSetKernelArgSVMPointer(kernel, 1, clBuffer2);
+  handleError(error, "clSetKernelArg");
+
+  error = clSetKernelArg(kernel, 2, sizeof(float), &clValue);
+  handleError(error, "clSetKernelArg");
+
+  size_t global_item_size[] = {(size_t)clLength};
+
+  error = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
+                         global_item_size, NULL, 0, NULL, NULL);
+  handleError(error, "clEnqueueNDRangeKernel");
+
+  clReleaseKernel(kernel);
+} JVM_END
+
+JVM_ENTRY(void, SVMBufferSupport_ror(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jCommandQueue, jlong b1, jlong b2, jint value, jint length)) {
+  cl_int error = 0;
+  const cl_program clProgram = (cl_program)jProgram;
+  const cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
+  float* clBuffer1 = (float *)b1;
+  float* clBuffer2 = (float *)b2;
+  const int clValue = (int)value;
+  const int clLength = (int)length;
+
+  const cl_kernel kernel = clCreateKernel(clProgram, "ror", &error);
+  handleError(error, "clCreateKernel");
+
+  error = clSetKernelArgSVMPointer(kernel, 0, clBuffer1);
+  handleError(error, "clSetKernelArg");
+
+  error = clSetKernelArgSVMPointer(kernel, 1, clBuffer2);
+  handleError(error, "clSetKernelArg");
+
+  error = clSetKernelArg(kernel, 2, sizeof(int), &clValue);
+  handleError(error, "clSetKernelArg");
+
+  error = clSetKernelArg(kernel, 3, sizeof(int), &clLength);
+  handleError(error, "clSetKernelArg");
+
+  size_t global_item_size[] = {(size_t)clLength};
+
+  error = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
+                         global_item_size, NULL, 0, NULL, NULL);
+  handleError(error, "clEnqueueNDRangeKernel");
+
+  clReleaseKernel(kernel);
+} JVM_END
+
+JVM_ENTRY(void, SVMBufferSupport_rol(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jCommandQueue, jlong b1, jlong b2, jint value, jint length)) {
+  cl_int error = 0;
+  const cl_program clProgram = (cl_program)jProgram;
+  const cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
+  float* clBuffer1 = (float *)b1;
+  float* clBuffer2 = (float *)b2;
+  const int clValue = (int)value;
+  const int clLength = (int)length;
+
+  const cl_kernel kernel = clCreateKernel(clProgram, "rol", &error);
+  handleError(error, "clCreateKernel");
+
+  error = clSetKernelArgSVMPointer(kernel, 0, clBuffer1);
+  handleError(error, "clSetKernelArg");
+
+  error = clSetKernelArgSVMPointer(kernel, 1, clBuffer2);
+  handleError(error, "clSetKernelArg");
+
+  error = clSetKernelArg(kernel, 2, sizeof(int), &clValue);
+  handleError(error, "clSetKernelArg");
+
+  error = clSetKernelArg(kernel, 3, sizeof(int), &clLength);
   handleError(error, "clSetKernelArg");
 
   size_t global_item_size[] = {(size_t)clLength};
@@ -1245,6 +1522,44 @@ JVM_ENTRY(void, SVMBufferSupport_multiplyArea(JNIEnv *env, jclass vsclazz, jlong
   clReleaseKernel(kernel);
 } JVM_END
 
+JVM_ENTRY(void, SVMBufferSupport_eachAreaFMA(JNIEnv *env, jclass vsclazz, jlong jProgram, jlong jCommandQueue, jlong b1, jlong b2, jlong b3, jint width, jint kernelWidth, jint length)) {
+  cl_int error = 0;
+  const cl_program clProgram = (cl_program)jProgram;
+  const cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
+  float* clBuffer1 = (float *)b1;
+  float* clBuffer2 = (float *)b2;
+  float* clBuffer3 = (float *)b3;
+  const int clWidth = (int)width;
+  const int clKernelWidth = (int)kernelWidth;
+  const int clLength = (int)length;
+
+  const cl_kernel kernel = clCreateKernel(clProgram, "eachAreaFMA", &error);
+  handleError(error, "clCreateKernel");
+
+  error = clSetKernelArgSVMPointer(kernel, 0, clBuffer1);
+  handleError(error, "clSetKernelArg");
+
+  error = clSetKernelArgSVMPointer(kernel, 1, clBuffer2);
+  handleError(error, "clSetKernelArg");
+
+  error = clSetKernelArgSVMPointer(kernel, 2, clBuffer3);
+  handleError(error, "clSetKernelArg");
+
+  error = clSetKernelArg(kernel, 3, sizeof(int), &clWidth);
+  handleError(error, "clSetKernelArg");
+
+  error = clSetKernelArg(kernel, 4, sizeof(int), &clKernelWidth);
+  handleError(error, "clSetKernelArg");
+
+  size_t global_item_size[] = {(size_t)clLength};
+
+  error = clEnqueueNDRangeKernel(clCommandQueue, kernel, 1, NULL,
+                         global_item_size, NULL, 0, NULL, NULL);
+  handleError(error, "clEnqueueNDRangeKernel");
+
+  clReleaseKernel(kernel);
+} JVM_END
+
 #define CC (char*)  /*cast a literal from (const char*)*/
 #define FN_PTR(f) CAST_FROM_FN_PTR(void*, &f)
 
@@ -1274,7 +1589,10 @@ static JNINativeMethod jdk_internal_vm_vector_SVMBufferSupport_methods[] = {
     {CC "SumReduce",   CC "(JJJJII)F", FN_PTR(SVMBufferSupport_sumReduce)},
     {CC "Subtract",   CC "(JJJJFI)V", FN_PTR(SVMBufferSupport_subtractMinuend)},
     {CC "Subtract",   CC "(JJJJJI)V", FN_PTR(SVMBufferSupport_subtract)},
-    {CC "Multiply",   CC "(JJJJFI)V", FN_PTR(SVMBufferSupport_multiply)},
+    {CC "MultiplyIFF",   CC "(JJJJFI)V", FN_PTR(SVMBufferSupport_multiplyIFF)},
+    {CC "MultiplyFFF",   CC "(JJJJFI)V", FN_PTR(SVMBufferSupport_multiplyFFF)},
+    {CC "MultiplyFFI",   CC "(JJJJII)V", FN_PTR(SVMBufferSupport_multiplyFFI)},
+    {CC "MultiplyIII",   CC "(JJJJII)V", FN_PTR(SVMBufferSupport_multiplyIII)},
     {CC "Multiply",   CC "(JJJJJI)V", FN_PTR(SVMBufferSupport_multiplyBuffer)},
     {CC "MultiplyInt",   CC "(JJJJJI)V", FN_PTR(SVMBufferSupport_multiplyBufferInt)},
     {CC "MultiplyRange",   CC "(JJJIJIJI)V", FN_PTR(SVMBufferSupport_multiplyRange)},
@@ -1300,8 +1618,17 @@ static JNINativeMethod jdk_internal_vm_vector_SVMBufferSupport_methods[] = {
     {CC "Repeat1",   CC "(JJJJII)V", FN_PTR(SVMBufferSupport_repeat1)},
     {CC "Repeat2",   CC "(JJJJII)V", FN_PTR(SVMBufferSupport_repeat2)},
     {CC "Ashr",   CC "(JJJJII)V", FN_PTR(SVMBufferSupport_ashr)},
+    {CC "Lshl",   CC "(JJJJII)V", FN_PTR(SVMBufferSupport_lshl)},
+    {CC "ToInt",   CC "(JJJJI)V", FN_PTR(SVMBufferSupport_toInt)},
+    {CC "ToFloat",   CC "(JJJJI)V", FN_PTR(SVMBufferSupport_toFloat)},
     {CC "And",   CC "(JJJJII)V", FN_PTR(SVMBufferSupport_and)},
+    {CC "Or",   CC "(JJJJJI)V", FN_PTR(SVMBufferSupport_or)},
+    {CC "Max",   CC "(JJJJFI)V", FN_PTR(SVMBufferSupport_max)},
+    {CC "Min",   CC "(JJJJFI)V", FN_PTR(SVMBufferSupport_min)},
+    {CC "Ror",   CC "(JJJJII)V", FN_PTR(SVMBufferSupport_ror)},
+    {CC "Rol",   CC "(JJJJII)V", FN_PTR(SVMBufferSupport_rol)},
     {CC "MultiplyArea",   CC "(JJJJJIIII)V", FN_PTR(SVMBufferSupport_multiplyArea)},
+    {CC "EachAreaFMA",   CC "(JJJJJIII)V", FN_PTR(SVMBufferSupport_eachAreaFMA)},
 };
 
 JVM_ENTRY(void, JVM_RegisterSVMBufferSupportMethods(JNIEnv* env, jclass vsclass)) {

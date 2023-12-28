@@ -57,7 +57,13 @@ public class SVMBufferSupport {
 
     public static native void Subtract(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, float jMinuend, int length);
 
-    public static native void Multiply(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, float jFactor, int length);
+    public static native void MultiplyFFF(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, float jFactor, int length);
+
+    public static native void MultiplyIFF(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, float jFactor, int length);
+
+    public static native void MultiplyFFI(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, int jFactor, int length);
+
+    public static native void MultiplyIII(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, int jFactor, int length);
 
     public static native void Multiply(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, long jBuffer3, int length);
 
@@ -109,7 +115,25 @@ public class SVMBufferSupport {
 
     public static native void Ashr(long jProgram, long jCommandQueue, long b1, long b2, int amount, int length);
 
+    public static native void Lshl(long jProgram, long jCommandQueue, long b1, long b2, int amount, int length);
+
+    public static native void ToInt(long jProgram, long jCommandQueue, long b1, long b2, int length);
+
+    public static native void ToFloat(long jProgram, long jCommandQueue, long b1, long b2, int length);
+
     public static native void And(long jProgram, long jCommandQueue, long b1, long b2, int value, int length);
 
+    public static native void Or(long jProgram, long jCommandQueue, long b1, long b2, long b3, int length);
+
+    public static native void Max(long jProgram, long jCommandQueue, long b1, long b2, float value, int length);
+
+    public static native void Min(long jProgram, long jCommandQueue, long b1, long b2, float value, int length);
+
+    public static native void Ror(long jProgram, long jCommandQueue, long b1, long b2, int amount, int length);
+
+    public static native void Rol(long jProgram, long jCommandQueue, long b1, long b2, int amount, int length);
+
     public static native void MultiplyArea(long jProgram, long jCommandQueue, long b1, long b2, long b3, int offset, int thisWidth, int factorWidth, int length);
+
+    public static native void EachAreaFMA(long jProgram, long jCommandQueue, long b1, long b2, long b3, int width, int kernelWidth, int length);
 }
