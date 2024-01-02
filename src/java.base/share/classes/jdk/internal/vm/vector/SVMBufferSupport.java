@@ -41,6 +41,8 @@ public class SVMBufferSupport {
 
     public static native void CopyToArray(long jContext, long jCommandQueue, long jBuffer, float[] jArray);
 
+    public static native void CopyToArray(long jContext, long jCommandQueue, long jBuffer, float[] jArray, int bufferLength, int length, int offset);
+
     public static native void ReleaseSVMBuffer(long jContext, long jCommandQueue, long jBuffer);
 
     public static native void ReleaseSVMBufferInt(long jContext, long jCommandQueue, long jBuffer);
@@ -57,17 +59,21 @@ public class SVMBufferSupport {
 
     public static native void Subtract(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, float jMinuend, int length);
 
-    public static native void MultiplyFFF(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, float jFactor, int length);
+    public static native void MulFFF(long jProgram, long jCommandQueue, long jBuffer1, float jFactor, long jBuffer2, int length);
 
-    public static native void MultiplyIFF(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, float jFactor, int length);
+    public static native void MulIFF(long jProgram, long jCommandQueue, long jBuffer1, float jFactor, long jBuffer2, int length);
 
-    public static native void MultiplyFFI(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, int jFactor, int length);
+    public static native void MulFIF(long jProgram, long jCommandQueue, long jBuffer1, int jFactor, long jBuffer2, int length);
 
-    public static native void MultiplyIII(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, int jFactor, int length);
+    public static native void MulIII(long jProgram, long jCommandQueue, long jBuffer1, int jFactor, long jBuffer2, int length);
 
-    public static native void Multiply(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, long jBuffer3, int length);
+    public static native void MulFFF(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, long jBuffer3, int length);
 
-    public static native void MultiplyInt(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, long jBuffer3, int length);
+    public static native void MulFIF(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, long jBuffer3, int length);
+
+    public static native void MulIII(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, long jBuffer3, int length);
+
+    public static native void MulVector(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, long jBuffer3, int length);
 
     public static native void Sqrt(long jProgram, long jCommandQueue, long jBuffer1, long jBuffer2, int length);
 
@@ -96,8 +102,6 @@ public class SVMBufferSupport {
     public static native void MultiplyRange(long jProgram, long jCommandQueue, long b1, int index1, long b2, int index2, long b3, int amount);
 
     public static native void DFT(long jProgram, long jCommandQueue, long b1, long b2, long b3, long b4, int size);
-
-    public static native void ForSum(long jProgram, long jCommandQueue, long b1, long b2, float v1, int length);
 
     public static native void ExecuteKernel(long jKernel, long jCommandQueue, int length);
 

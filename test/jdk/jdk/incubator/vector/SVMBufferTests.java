@@ -54,31 +54,36 @@ public class SVMBufferTests {
     private static int size = 8022;
 
     public static void main(String[] args) throws Exception {
-        var a = iotaFloatArray(SVMBufferTests.size);
-        var one = ones(SVMBufferTests.size);
+        var floatIota = iotaFloatArray(size);
+        var intIota = iotaIntArray(size);
+        var one = ones(size);
         var bufferOne = SVMBuffer.fromArray(SPECIES, one);
-        var bufferA = SVMBuffer.fromArray(SPECIES, a);
-        var bufferB = SVMBuffer.fromArray(SPECIES, a);
+        var bufferAInt = SVMBuffer.fromArray(SPECIES, intIota);
+        var bufferBInt = SVMBuffer.fromArray(SPECIES, intIota);
+        var bufferA = SVMBuffer.fromArray(SPECIES, floatIota);
+        var bufferB = SVMBuffer.fromArray(SPECIES, floatIota);
 
-        SVMBufferTests.IntoArrayFloat(bufferA, a);
-        SVMBufferTests.FromArrayFloat(a);
+        SVMBufferTests.IntoArrayFloat(bufferA, floatIota);
+        SVMBufferTests.FromArrayFloat(floatIota);
         SVMBufferTests.SumReduceFloat(bufferOne);
-        SVMBufferTests.AddBufferFloat(bufferA, bufferB, a, a);
-        SVMBufferTests.SubtractBufferFloat(bufferA, bufferB, a, a);
-        SVMBufferTests.SubtractFloat(bufferA, a, 2.0f);
-        SVMBufferTests.MultiplyFloat(bufferA, a, 2.0f);
-        SVMBufferTests.MultiplyBufferFloat(bufferA, bufferB, a, a);
-        SVMBufferTests.DivisionFloat(bufferA, a, 2.0f);
-        SVMBufferTests.DivisionBufferFloat(bufferA, bufferB, a, a);
-        SVMBufferTests.SqrtFloat(bufferA, a);
-        SVMBufferTests.LogFloat(bufferA, a);
-        SVMBufferTests.CosFloat(bufferA, a);
-        SVMBufferTests.SinFloat(bufferA, a);
+        SVMBufferTests.AddBufferFloat(bufferA, bufferB, floatIota, floatIota);
+        SVMBufferTests.SubtractBufferFloat(bufferA, bufferB, floatIota, floatIota);
+        SVMBufferTests.SubtractFloat(bufferA, floatIota, 2.0f);
+        SVMBufferTests.MultiplyFFF(bufferA, floatIota, 2.0f);
+        SVMBufferTests.MultiplyFIF(bufferA, floatIota, 1);
+        SVMBufferTests.MultiplyIII(bufferAInt, intIota, 1);
+        SVMBufferTests.MultiplyBufferFloat(bufferA, bufferB, floatIota, floatIota);
+        SVMBufferTests.DivisionFloat(bufferA, floatIota, 2.0f);
+        SVMBufferTests.DivisionBufferFloat(bufferA, bufferB, floatIota, floatIota);
+        SVMBufferTests.SqrtFloat(bufferA, floatIota);
+        SVMBufferTests.LogFloat(bufferA, floatIota);
+        SVMBufferTests.CosFloat(bufferA, floatIota);
+        SVMBufferTests.SinFloat(bufferA, floatIota);
         SVMBufferTests.ExpFloat(bufferOne, one);
-        SVMBufferTests.AbsFloat(bufferA, a);
+        SVMBufferTests.AbsFloat(bufferA, floatIota);
         SVMBufferTests.BroadcastFloat(2.0f);
 
-        SVMBufferTests.InPlaceMethods(bufferA, bufferB, a, bufferOne, one);
+        SVMBufferTests.InPlaceMethods(bufferA, bufferB, floatIota, bufferOne, one);
     }
 
     private static void InPlaceMethods(SVMBuffer bufferA, SVMBuffer bufferB, float[] a, SVMBuffer bufferOne, float[] one) throws Exception {
@@ -123,13 +128,13 @@ public class SVMBufferTests {
         var buffer = SVMBuffer.fromArray(SPECIES, array);
         var bufferArray = new float[buffer.length];
         buffer.intoArray(bufferArray);
-        AssertFloatArray(bufferArray, array, SVMBufferTests.delta, "FromArrayFloat");
+        AssertArray(bufferArray, array, SVMBufferTests.delta, "FromArrayFloat");
     }
 
     public static void IntoArrayFloat(SVMBuffer buffer, float[] array) throws Exception {
         var bufferArray = new float[buffer.length];
         buffer.intoArray(bufferArray);
-        AssertFloatArray(bufferArray, array, SVMBufferTests.delta, "IntoArrayFloat");
+        AssertArray(bufferArray, array, SVMBufferTests.delta, "IntoArrayFloat");
     }
 
     private static void MultiplyInPlaceBufferFloat(SVMBuffer buffer, SVMBuffer factors, float[] a, float[] b) throws Exception {
@@ -137,8 +142,8 @@ public class SVMBufferTests {
         var resultArray = new float[buffer.length];
         result.intoArray(resultArray);
         String info =  "MultiplyInPlaceBufferFloat";
-        var expectedArray = ArrayMultiplicationFloat(a, b, info);
-        AssertFloatArray(resultArray, expectedArray, SVMBufferTests.delta, info);
+        var expectedArray = ArrayMultiplication(a, b, info);
+        AssertArray(resultArray, expectedArray, SVMBufferTests.delta, info);
         checkBufferAddressEqual(result, buffer, info);
     }
 
@@ -147,18 +152,36 @@ public class SVMBufferTests {
         var resultArray = new float[buffer.length];
         result.intoArray(resultArray);
         String info =  "MultiplyBufferFloat";
-        var expectedArray = ArrayMultiplicationFloat(a, b, info);
-        AssertFloatArray(resultArray, expectedArray, SVMBufferTests.delta, info);
+        var expectedArray = ArrayMultiplication(a, b, info);
+        AssertArray(resultArray, expectedArray, SVMBufferTests.delta, info);
         checkBufferAddressUnequal(result, buffer, info);
     }
 
-    private static void MultiplyFloat(SVMBuffer buffer, float[] a, float b) throws Exception {
+    private static void MultiplyFFF(SVMBuffer buffer, float[] a, float b) throws Exception {
         var result = buffer.mul(b);
         var resultArray = new float[buffer.length];
         result.intoArray(resultArray);
-        String info =  "MultiplyFloat";
-        var expectedArray = ArrayMultiplicationFloat(a, b);
-        AssertFloatArray(resultArray, expectedArray, SVMBufferTests.delta, info);
+        String info =  "MultiplyFFF";
+        var expectedArray = ArrayMultiplication(a, b);
+        AssertArray(resultArray, expectedArray, SVMBufferTests.delta, info);
+    }
+
+    private static void MultiplyFIF(SVMBuffer buffer, float[] a, int b) throws Exception {
+        var result = buffer.mul(b);
+        var resultArray = new float[buffer.length];
+        result.intoArray(resultArray);
+        String info =  "MultiplyFIF";
+        var expectedArray = ArrayMultiplication(a, b);
+        AssertArray(resultArray, expectedArray, SVMBufferTests.delta, info);
+    }
+
+    private static void MultiplyIII(SVMBuffer buffer, int[] a, int b) throws Exception {
+        var result = buffer.mul(b);
+        var resultArray = new int[buffer.length];
+        result.intoArray(resultArray);
+        String info =  "MultiplyIII";
+        var expectedArray = ArrayMultiplication(a, b);
+        AssertArray(resultArray, expectedArray, info);
     }
 
     private static void MultiplyInPlaceFloat(SVMBuffer buffer, float[] a, float b) throws Exception {
@@ -166,8 +189,8 @@ public class SVMBufferTests {
         var resultArray = new float[buffer.length];
         result.intoArray(resultArray);
         String info =  "MultiplyInPlaceFloat";
-        var expectedArray = ArrayMultiplicationFloat(a, b);
-        AssertFloatArray(resultArray, expectedArray, SVMBufferTests.delta, info);
+        var expectedArray = ArrayMultiplication(a, b);
+        AssertArray(resultArray, expectedArray, SVMBufferTests.delta, info);
         checkBufferAddressEqual(result, buffer, info);
     }
 
@@ -177,7 +200,7 @@ public class SVMBufferTests {
         result.intoArray(resultArray);
         String info = "AddBufferFloat";
         var expectedArray = ArrayAdditionFloat(a, b, info);
-        AssertFloatArray(resultArray, expectedArray, SVMBufferTests.delta, info);
+        AssertArray(resultArray, expectedArray, SVMBufferTests.delta, info);
         checkBufferAddressUnequal(result, buffer, info);
     }
 
@@ -187,7 +210,7 @@ public class SVMBufferTests {
         result.intoArray(resultArray);
         String info = "AddInPlaceFloat";
         var expectedArray = ArrayAdditionFloat(a, b, info);
-        AssertFloatArray(resultArray, expectedArray, SVMBufferTests.delta, info);
+        AssertArray(resultArray, expectedArray, SVMBufferTests.delta, info);
         checkBufferAddressEqual(result, buffer, info);
     }
 
@@ -197,7 +220,7 @@ public class SVMBufferTests {
         result.intoArray(resultArray);
         String info = "SubtractBufferFloat";
         var expectedArray = ArraySubtractionFloat(a, b, info);
-        AssertFloatArray(resultArray, expectedArray, SVMBufferTests.delta, info);
+        AssertArray(resultArray, expectedArray, SVMBufferTests.delta, info);
         checkBufferAddressUnequal(result, buffer, info);
     }
 
@@ -207,7 +230,7 @@ public class SVMBufferTests {
         result.intoArray(resultArray);
         String info = "SubtractFloat";
         var expectedArray = ArraySubtractionFloat(a, b);
-        AssertFloatArray(resultArray, expectedArray, SVMBufferTests.delta, info);
+        AssertArray(resultArray, expectedArray, SVMBufferTests.delta, info);
     }
 
     private static void SubtractInPlaceFloat(SVMBuffer buffer, SVMBuffer summand, float[] a, float[] b) throws Exception {
@@ -216,7 +239,7 @@ public class SVMBufferTests {
         result.intoArray(resultArray);
         String info =  "SubtractInPlaceFloat";
         var expectedArray = ArraySubtractionFloat(a, b, info);
-        AssertFloatArray(resultArray, expectedArray, SVMBufferTests.delta, info);
+        AssertArray(resultArray, expectedArray, SVMBufferTests.delta, info);
         checkBufferAddressEqual(result, buffer, info);
     }
 
@@ -233,7 +256,7 @@ public class SVMBufferTests {
         result.intoArray(resultArray);
         String info =  "DivisionInPlaceBufferFloat";
         var expectedArray = ArrayDivisionFloat(a, b, info);
-        AssertFloatArray(resultArray, expectedArray, SVMBufferTests.delta, info);
+        AssertArray(resultArray, expectedArray, SVMBufferTests.delta, info);
         checkBufferAddressEqual(result, buffer, info);
     }
 
@@ -243,7 +266,7 @@ public class SVMBufferTests {
         result.intoArray(resultArray);
         String info =  "DivisionBufferFloat";
         var expectedArray = ArrayDivisionFloat(a, b, info);
-        AssertFloatArray(resultArray, expectedArray, SVMBufferTests.delta, info);
+        AssertArray(resultArray, expectedArray, SVMBufferTests.delta, info);
         checkBufferAddressUnequal(result, buffer, info);
     }
 
@@ -253,7 +276,7 @@ public class SVMBufferTests {
         result.intoArray(resultArray);
         String info =  "DivisionFloat";
         var expectedArray = ArrayDivisionFloat(a, b);
-        AssertFloatArray(resultArray, expectedArray, SVMBufferTests.delta, info);
+        AssertArray(resultArray, expectedArray, SVMBufferTests.delta, info);
     }
 
     private static void DivisionInPlaceFloat(SVMBuffer buffer, float[] a, float b) throws Exception {
@@ -262,7 +285,7 @@ public class SVMBufferTests {
         result.intoArray(resultArray);
         String info =  "DivisionInPlaceFloat";
         var expectedArray = ArrayDivisionFloat(a, b);
-        AssertFloatArray(resultArray, expectedArray, SVMBufferTests.delta, info);
+        AssertArray(resultArray, expectedArray, SVMBufferTests.delta, info);
         checkBufferAddressEqual(result, buffer, info);
     }
 
@@ -272,7 +295,7 @@ public class SVMBufferTests {
         result.intoArray(resultArray);
         var expectedArray = ArraySqrt(a);
         String info = "SqrtFloat";
-        AssertFloatArray(resultArray, expectedArray, SVMBufferTests.delta, info);
+        AssertArray(resultArray, expectedArray, SVMBufferTests.delta, info);
         checkBufferAddressUnequal(result, buffer, info);
     }
 
@@ -282,7 +305,7 @@ public class SVMBufferTests {
         result.intoArray(resultArray);
         var expectedArray = ArraySqrt(a);
         String info = "SqrtInPlaceFloat";
-        AssertFloatArray(resultArray, expectedArray, SVMBufferTests.delta, info);
+        AssertArray(resultArray, expectedArray, SVMBufferTests.delta, info);
         checkBufferAddressEqual(result, buffer, info);
     }
 
@@ -292,7 +315,7 @@ public class SVMBufferTests {
         result.intoArray(resultArray);
         var expectedArray = ArrayLog(a);
         String info = "LogFloat";
-        AssertFloatArray(resultArray, expectedArray, SVMBufferTests.delta, info);
+        AssertArray(resultArray, expectedArray, SVMBufferTests.delta, info);
         checkBufferAddressUnequal(result, buffer, info);
     }
 
@@ -302,7 +325,7 @@ public class SVMBufferTests {
         result.intoArray(resultArray);
         var expectedArray = ArrayLog(a);
         String info = "LogInPlaceFloat";
-        AssertFloatArray(resultArray, expectedArray, SVMBufferTests.delta, info);
+        AssertArray(resultArray, expectedArray, SVMBufferTests.delta, info);
         checkBufferAddressEqual(result, buffer, info);
     }
 
@@ -312,7 +335,7 @@ public class SVMBufferTests {
         result.intoArray(resultArray);
         var expectedArray = ArrayCos(a);
         String info = "CosFloat";
-        AssertFloatArray(resultArray, expectedArray, SVMBufferTests.delta, info);
+        AssertArray(resultArray, expectedArray, SVMBufferTests.delta, info);
         checkBufferAddressUnequal(result, buffer, info);
     }
 
@@ -322,7 +345,7 @@ public class SVMBufferTests {
         result.intoArray(resultArray);
         var expectedArray = ArrayCos(a);
         String info = "CosInPlaceFloat";
-        AssertFloatArray(resultArray, expectedArray, SVMBufferTests.delta, info);
+        AssertArray(resultArray, expectedArray, SVMBufferTests.delta, info);
         checkBufferAddressEqual(result, buffer, info);
     }
 
@@ -333,7 +356,7 @@ public class SVMBufferTests {
         float[] expectedArray = ArrayExp(a);
         String info = "ExpFloat";
         float delta = 1.1f;
-        AssertFloatArray(resultArray, expectedArray, delta, info);
+        AssertArray(resultArray, expectedArray, delta, info);
         checkBufferAddressUnequal(result, buffer, info);
     }
 
@@ -344,7 +367,7 @@ public class SVMBufferTests {
         var expectedArray = ArrayExp(a);
         String info = "ExpInPlaceFloat";
         float delta = 0.1f;
-        AssertFloatArray(resultArray, expectedArray, delta, info);
+        AssertArray(resultArray, expectedArray, delta, info);
         checkBufferAddressEqual(result, buffer, info);
     }
 
@@ -354,7 +377,7 @@ public class SVMBufferTests {
         result.intoArray(resultArray);
         var expectedArray = ArrayAbs(a);
         String info = "AbsFloat";
-        AssertFloatArray(resultArray, expectedArray, SVMBufferTests.delta, info);
+        AssertArray(resultArray, expectedArray, SVMBufferTests.delta, info);
         checkBufferAddressUnequal(result, buffer, info);
     }
 
@@ -364,7 +387,7 @@ public class SVMBufferTests {
         result.intoArray(resultArray);
         var expectedArray = ArrayAbs(a);
         String info = "AbsInPlaceFloat";
-        AssertFloatArray(resultArray, expectedArray, SVMBufferTests.delta, info);
+        AssertArray(resultArray, expectedArray, SVMBufferTests.delta, info);
         checkBufferAddressEqual(result, buffer, info);
     }
 
@@ -374,7 +397,7 @@ public class SVMBufferTests {
         result.intoArray(resultArray);
         var expectedArray = ArraySin(a);
         String info = "SinFloat";
-        AssertFloatArray(resultArray, expectedArray, SVMBufferTests.delta, info);
+        AssertArray(resultArray, expectedArray, SVMBufferTests.delta, info);
         checkBufferAddressUnequal(result, buffer, info);
     }
 
@@ -384,7 +407,7 @@ public class SVMBufferTests {
         result.intoArray(resultArray);
         var expectedArray = ArraySin(a);
         String info = "SinInPlaceFloat";
-        AssertFloatArray(resultArray, expectedArray, SVMBufferTests.delta, info);
+        AssertArray(resultArray, expectedArray, SVMBufferTests.delta, info);
         checkBufferAddressEqual(result, buffer, info);
     }
 
@@ -491,7 +514,7 @@ public class SVMBufferTests {
         return c;
     }
 
-    private static float[] ArrayMultiplicationFloat(float[] a, float b) throws Exception {
+    private static float[] ArrayMultiplication(float[] a, float b) throws Exception {
         var c = new float[a.length];
         for (int i = 0; i < a.length; i++){
             c[i] = a[i] * b;
@@ -499,7 +522,31 @@ public class SVMBufferTests {
         return c;
     }
 
-    private static float[] ArrayMultiplicationFloat(float[] a, float[] b, String info) throws Exception {
+    private static float[] ArrayMultiplication(float[] a, int b) throws Exception {
+        var c = new float[a.length];
+        for (int i = 0; i < a.length; i++){
+            c[i] = a[i] * b;
+        }
+        return c;
+    }
+
+    private static int[] ArrayMultiplication(int[] a, int b) throws Exception {
+        var c = new int[a.length];
+        for (int i = 0; i < a.length; i++){
+            c[i] = a[i] * b;
+        }
+        return c;
+    }
+
+    private static float[] ArrayMultiplication(int[] a, float b) throws Exception {
+        var c = new float[a.length];
+        for (int i = 0; i < a.length; i++){
+            c[i] = (float)a[i] * b;
+        }
+        return c;
+    }
+
+    private static float[] ArrayMultiplication(float[] a, float[] b, String info) throws Exception {
         checkArrayLength(a, b, info);
         var c = new float[a.length];
         for (int i = 0; i < a.length; i++){
@@ -508,7 +555,37 @@ public class SVMBufferTests {
         return c;
     }
 
+    private static float[] ArrayMultiplication(float[] a, int[] b, String info) throws Exception {
+        checkArrayLength(b, a, info);
+        var c = new float[a.length];
+        for (int i = 0; i < a.length; i++){
+            c[i] = a[i] * b[i];
+        }
+        return c;
+    }
+
+    private static int[] ArrayMultiplication(int[] a, int[] b, String info) throws Exception {
+        checkArrayLength(a, b, info);
+        var c = new int[a.length];
+        for (int i = 0; i < a.length; i++){
+            c[i] = a[i] * b[i];
+        }
+        return c;
+    }
+
     private static void checkArrayLength(float[] a, float[] b, String info) throws Exception {
+        if (a.length != b.length) {
+            throw new RuntimeException(info + ": not same array length!");
+        }
+    }
+
+    private static void checkArrayLength(int[] a, float[] b, String info) throws Exception {
+        if (a.length != b.length) {
+            throw new RuntimeException(info + ": not same array length!");
+        }
+    }
+
+    private static void checkArrayLength(int[] a, int[] b, String info) throws Exception {
         if (a.length != b.length) {
             throw new RuntimeException(info + ": not same array length!");
         }
@@ -538,6 +615,14 @@ public class SVMBufferTests {
         return array;
     }
 
+    private static int[] iotaIntArray(int size){
+        var array = new int[size];
+        for (int i = 0; i < size; i++){
+            array[i] = i;
+        }
+        return array;
+    }
+
     private static float[] ones(int size){
         var array = new float[size];
         for (int i = 0; i < size; i++){
@@ -546,7 +631,7 @@ public class SVMBufferTests {
         return array;
     }
 
-    private static void AssertFloatArray(float[] f1, float[] f2, float delta, String info) throws Exception {
+    private static void AssertArray(float[] f1, float[] f2, float delta, String info) throws Exception {
         if (f1.length != f2.length) {
             throw new RuntimeException(info = "Float Array's do not have the same length!");
         }
@@ -554,6 +639,19 @@ public class SVMBufferTests {
 
         for (int i = 0; i < n; i++) {
             if (Math.abs(f1[i] - f2[i]) > delta) {
+                throw new RuntimeException(info + ": Element " + i + " is not < delta!");
+            }
+        }
+    }
+
+    private static void AssertArray(int[] f1, int[] f2, String info) throws Exception {
+        if (f1.length != f2.length) {
+            throw new RuntimeException(info = "Float Array's do not have the same length!");
+        }
+        int n = f1.length;
+
+        for (int i = 0; i < n; i++) {
+            if (f1[i] != f2[i]) {
                 throw new RuntimeException(info + ": Element " + i + " is not < delta!");
             }
         }
