@@ -15,7 +15,7 @@ public class SVMBuffer {
     private GPUInformation info;
 
     /**
-     *  abc
+     *  Type of the SVMbuffer
      */
     public final Type type;
 
@@ -134,7 +134,7 @@ public class SVMBuffer {
     }
 
     /**
-     *  TODO
+     *  Calculates the FMA of this SVMBuffer with the 
      *  @param factor TODO
      *  @param width TODO
      *  @param kernelWidth TODO
@@ -166,76 +166,36 @@ public class SVMBuffer {
      *  Reduces this SVMBuffer to a single value using addition
      *  @return the result of the sum reduction
      */
-    public float sumReduce(){
-        return SVMBufferSupport.SumReduce(info.GetContext(), info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, info.GetMaxWorkGroupSize(), this.length);
+    public float sumReduceFloat() {
+        return SVMBufferSupport.SumReduceFLOAT(info.GetContext(), info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, info.GetMaxWorkGroupSize(), this.length);
     }
 
     /**
-     *  Elementwise addition of this SVMBuffer and the summand SVMBuffer
-     *  @param summand The SVMBuffer which gets added the this SVMBuffer
-     *  @return a new SVMBuffer containing the added elements
+     *  Reduces this SVMBuffer to a single value using addition
+     *  @return the result of the sum reduction
      */
-    public SVMBuffer add(SVMBuffer summand) {
-        Type resultType = type.resultOf(summand.type);
-        SVMBuffer results = new SVMBuffer(info, this.length, resultType);
-        SVMBufferSupport.AddSVMBuffer(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, summand.svmBuffer, results.svmBuffer, this.length);
-        return results;
+    public int sumReduceInt() {
+        return SVMBufferSupport.SumReduceINT(info.GetContext(), info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, info.GetMaxWorkGroupSize(), this.length);
     }
 
-    /**
-     *  Elementwise addition of this SVMBuffer and the summand SVMBuffer
-     *  @param summand The SVMBuffer which gets added the this SVMBuffer
-     *  @return a new SVMBuffer containing the added elements
-     */
-    public SVMBuffer addInPlace(SVMBuffer summand) {
-        SVMBufferSupport.AddSVMBuffer(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, summand.svmBuffer, this.svmBuffer, this.length);
-        return this;
-    }
 
     /**
-     *  Subtracts the subtrahend from this SVMBuffer
-     *  @param subtrahend of the subtraction
-     *  @return the result of the subtraction
+     *  Multiplies this SVMBuffer with the factor
+     *  @param factor of the multiplication
+     *  @return the multiplied SVMBuffer
      */
-    public SVMBuffer sub(SVMBuffer subtrahend){
-        Type resultType = type.resultOf(subtrahend.type);
-        SVMBuffer result = new SVMBuffer(info, length, resultType);
-
-        SVMBufferSupport.Subtract(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, subtrahend.svmBuffer, result.svmBuffer, this.length);
-        return result;
-    }
-
-    /**
-     *  Subtracts the subtrahend from this SVMBuffer
-     *  @param subtrahend of the subtraction
-     *  @return the result of the subtraction
-     */
-    public SVMBuffer subInPlace(SVMBuffer subtrahend){
-        SVMBufferSupport.Subtract(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, subtrahend.svmBuffer, this.svmBuffer, this.length);
-        return this;
-    }
-
-    /**
-     *  Subtracts the subtrahend from this SVMBuffer
-     *  @param subtrahend of the subtraction
-     *  @return the subtracted SVMBuffer
-     */
-    public SVMBuffer sub(float subtrahend){
+    public SVMBuffer mul(int factor){
         SVMBuffer results = new SVMBuffer(info, length, this.type);
-
-        SVMBufferSupport.Subtract(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, results.svmBuffer, subtrahend, this.length);
-        return results;
+        return executeOperationWithArguments(factor, results, "mul");
     }
 
     /**
-     *  TODO
-     *  @param vector TODO
-     *  @return TODO
+     *  Multiplies this SVMBuffer with the factor
+     *  @param factor of the multiplication
+     *  @return the multiplied SVMBuffer
      */
-    public SVMBuffer mulVector(SVMBuffer vector){
-        var results = new SVMBuffer(info, vector.length, Type.FLOAT);
-        SVMBufferSupport.MulVector(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, vector.svmBuffer, results.svmBuffer, results.length);
-        return results;
+    public SVMBuffer mulInPlace(int factor){
+        return executeOperationWithArguments(factor, this, "mul");
     }
 
     /**
@@ -245,35 +205,7 @@ public class SVMBuffer {
      */
     public SVMBuffer mul(float factor){
         SVMBuffer results = new SVMBuffer(info, length, Type.FLOAT);
-        switch(this.type) {
-            case Type.FLOAT:
-                SVMBufferSupport.MulFFF(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer,  factor, results.svmBuffer,this.length);
-                break;
-            case Type.INT:
-                SVMBufferSupport.MulIFF(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, factor, results.svmBuffer, this.length);
-                break;
-            default: throw new AssertionError("Multiplication of " + this.type + " with float is not supported!");
-        }
-        return results;
-    }
-
-    /**
-     *  Multiplies this SVMBuffer with the factor
-     *  @param factor of the multiplication
-     *  @return the multiplied SVMBuffer
-     */
-    public SVMBuffer mul(int factor){
-        SVMBuffer results = new SVMBuffer(info, length, this.type);
-        switch(this.type) {
-            case Type.FLOAT:
-                SVMBufferSupport.MulFIF(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, factor, results.svmBuffer, this.length);
-                break;
-            case Type.INT:
-                SVMBufferSupport.MulIII(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, factor, results.svmBuffer, this.length);
-                break;
-            default: throw new AssertionError("Multiplication of " + this.type + " with int is not supported!");
-        }
-        return results;
+        return executeOperationWithArguments(factor, results, "mul");
     }
 
     /**
@@ -283,88 +215,244 @@ public class SVMBuffer {
      */
     public SVMBuffer mulInPlace(float factor){
         if(this.type != Type.FLOAT){
-            throw new AssertionError("Cannot change the type of this SVMBuffer to float");
+            throw new AssertionError("Cannot change the type of this SVMBuffer from " + this.type + " to " + Type.FLOAT);
         }
-        SVMBufferSupport.MulFFF(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, factor, this.svmBuffer, this.length);
-        return this;
+        return executeOperationWithArguments(factor, this, "mul");
     }
 
     /**
-     *  Multiplies this SVMBuffer with the factor
-     *  @param factor of the multiplication
-     *  @return the multiplied SVMBuffer
+     *  Adds value to this SVMBuffer
+     *  @param value of the addition
+     *  @return the added SVMBuffer
      */
-    public SVMBuffer mulInPlace(int factor){
-        switch(this.type) {
-            case Type.FLOAT:
-                SVMBufferSupport.MulFIF(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, factor, this.svmBuffer, this.length);
-                break;
-            case Type.INT:
-                SVMBufferSupport.MulIII(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, factor, this.svmBuffer, this.length);
-                break;
-            default: throw new AssertionError("Multiplication of " + this.type + " with int is not supported!");
-        }
-        return this;
+    public SVMBuffer add(int value){
+        SVMBuffer results = new SVMBuffer(info, length, this.type);
+        return executeOperationWithArguments(value, results, "add");
     }
 
     /**
-     *  Multiplies this SVMBuffer with the factors SVMBuffer
-     *  @param factors of the multiplication
+     *  Adds value to this SVMBuffer
+     *  @param value of the addition
+     *  @return the added SVMBuffer
+     */
+    public SVMBuffer addInPlace(int value){
+        return executeOperationWithArguments(value, this, "add");
+    }
+
+    /**
+     *  Adds value to this SVMBuffer
+     *  @param value of the addition
+     *  @return the added SVMBuffer
+     */
+    public SVMBuffer add(float value){
+        SVMBuffer results = new SVMBuffer(info, length, Type.FLOAT);
+        return executeOperationWithArguments(value, results, "add");
+    }
+
+    /**
+     *  Adds value to this SVMBuffer
+     *  @param value of the addition
+     *  @return the added SVMBuffer
+     */
+    public SVMBuffer addInPlace(float value){
+        if(this.type != Type.FLOAT){
+            throw new AssertionError("Cannot change the type of this SVMBuffer from " + this.type + " to " + Type.FLOAT);
+        }
+        return executeOperationWithArguments(value, this, "add");
+    }
+
+    /**
+     *  subtracts the value from this SVMBuffer
+     *  @param value subtrahend of the subtraction
+     *  @return the subtracted SVMBuffer
+     */
+    public SVMBuffer sub(int value){
+        SVMBuffer results = new SVMBuffer(info, length, this.type);
+        return executeOperationWithArguments(value, results, "sub");
+    }
+
+    /**
+     *  subtracts the value from this SVMBuffer
+     *  @param value subtrahend of the subtraction
+     *  @return the subtracted SVMBuffer
+     */
+    public SVMBuffer subInPlace(int value){
+        return executeOperationWithArguments(value, this, "sub");
+    }
+
+    /**
+     *  subtracts the value from this SVMBuffer
+     *  @param value subtrahend of the subtraction
+     *  @return the subtracted SVMBuffer
+     */
+    public SVMBuffer sub(float value){
+        SVMBuffer results = new SVMBuffer(info, length, Type.FLOAT);
+        return executeOperationWithArguments(value, results, "sub");
+    }
+
+    /**
+     *  subtracts the value from this SVMBuffer
+     *  @param value subtrahend of the subtraction
+     *  @return the subtracted SVMBuffer
+     */
+    public SVMBuffer subInPlace(float value){
+        if(this.type != Type.FLOAT){
+            throw new AssertionError("Cannot change the type of this SVMBuffer from " + this.type + " to " + Type.FLOAT);
+        }
+        return executeOperationWithArguments(value, this, "sub");
+    }
+
+    /**
+     *  Divides the value from this SVMBuffer
+     *  @param value divisor of the division
+     *  @return the division SVMBuffer
+     */
+    public SVMBuffer div(int value){
+        SVMBuffer results = new SVMBuffer(info, length, this.type);
+        return executeOperationWithArguments(value, results, "div");
+    }
+
+    /**
+     *  Divides the value from this SVMBuffer
+     *  @param value divisor of the division
+     *  @return the division SVMBuffer
+     */
+    public SVMBuffer divInPlace(int value){
+        return executeOperationWithArguments(value, this, "div");
+    }
+
+    /**
+     *  Divides the value from this SVMBuffer
+     *  @param value divisor of the division
+     *  @return the division SVMBuffer
+     */
+    public SVMBuffer div(float value){
+        SVMBuffer results = new SVMBuffer(info, length, Type.FLOAT);
+        return executeOperationWithArguments(value, results, "div");
+    }
+
+    /**
+     *  Divides the value from this SVMBuffer
+     *  @param value divisor of the division
+     *  @return the division SVMBuffer
+     */
+    public SVMBuffer divInPlace(float value){
+        if(this.type != Type.FLOAT){
+            throw new AssertionError("Cannot change the type of this SVMBuffer from " + this.type + " to " + Type.FLOAT);
+        }
+        return executeOperationWithArguments(value, this, "div");
+    }
+
+
+
+    /**
+     *  Multiplies the values by this SVMBuffer
+     *  @param values of the multiplication
      *  @return the multiplied SVMBuffer
      */
-    public SVMBuffer mul(SVMBuffer factors){
-        Type resultType = type.resultOf(factors.type);
+    public SVMBuffer mul(SVMBuffer values){
+        Type resultType = type.resultOf(values.type);
         SVMBuffer results = new SVMBuffer(info, length, resultType);
-        if(this.type == Type.FLOAT && factors.type == Type.FLOAT){
-            SVMBufferSupport.MulFFF(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, factors.svmBuffer, results.svmBuffer, this.length);
-        } else if(this.type == Type.FLOAT && factors.type == Type.INT){
-            SVMBufferSupport.MulFIF(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, factors.svmBuffer, results.svmBuffer, this.length);
-        } else if (this.type == Type.INT && factors.type == Type.FLOAT){
-            SVMBufferSupport.MulFIF(info.GetProgram(), info.GetCommandQueue(), factors.svmBuffer, this.svmBuffer, results.svmBuffer, this.length);
-        } else if(this.type == Type.INT && factors.type == Type.INT){
-            SVMBufferSupport.MulIII(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, factors.svmBuffer, results.svmBuffer, this.length);
-        } else {
-            throw new IllegalArgumentException("Invalid multiplication type");
-        }
-        return results;
+        return executeOperationWithArguments(values, results, "mul");
     }
 
-    // private SVMBuffer mul(SVMBuffer factors, SVMBuffer resultBuffer){
-    // }
-
     /**
-     *  Multiplies this SVMBuffer with the factors SVMBuffer
-     *  @param factors of the multiplication
+     *  Multiplies the values by this SVMBuffer
+     *  @param values of the multiplication
      *  @return the multiplied SVMBuffer
      */
-    public SVMBuffer mulInPlace(SVMBuffer factors){
-        if(this.type == Type.FLOAT && factors.type == Type.FLOAT){
-            SVMBufferSupport.MulFFF(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, factors.svmBuffer, this.svmBuffer, this.length);
-        } else if(this.type == Type.FLOAT && factors.type == Type.INT){
-            SVMBufferSupport.MulFIF(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, factors.svmBuffer, this.svmBuffer, this.length);
-        } else if(this.type == Type.INT && factors.type == Type.INT){
-            SVMBufferSupport.MulIII(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, factors.svmBuffer, this.svmBuffer, this.length);
-        } else {
-            throw new IllegalArgumentException("Invalid multiplication type");
+    public SVMBuffer mulInPlace(SVMBuffer values){
+        Type resultType = type.resultOf(values.type);
+        if(this.type != resultType){
+            throw new AssertionError("Cannot change the type of this SVMBuffer from " + this.type + " to " + resultType);
         }
-        return this;
+        return executeOperationWithArguments(values, this, "mul");
     }
 
     /**
-     *  Multiplies an rectangular area of this SVMBuffer with the facotr SVMBuffer
-     *  @param factor to be multiplied with this SVMBuffer
-     *  @param offset is the top left element of this SVMBuffer of the rectangular area
-     *  @param thisWidth width of the matrix of this SVMBuffer
-     *  @param factorWidth width of the matrix of the factor SVMBuffer
-     *  @return new SVMBuffer with the results. (Length == factor.length)
+     *  Multiplies this SVMBuffer with the vector. Used if this matrix represents a matrix
+     *  @param vector of the multiplication with the matrix
+     *  @return the new matrix resulting from the multiplication
      */
-    public SVMBuffer mulArea(SVMBuffer factor, int offset, int thisWidth, int factorWidth) {
-        Type resultType = type.resultOf(factor.type);
-        SVMBuffer results = new SVMBuffer(info, factor.length, resultType);
-        SVMBufferSupport.MultiplyArea(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, factor.svmBuffer, results.svmBuffer, offset, thisWidth, factorWidth, factor.length);
-        return results;
+    public SVMBuffer mulVector(SVMBuffer vector){
+        Type resultType = type.resultOf(vector.type);
+        SVMBuffer results = new SVMBuffer(info, vector.length, resultType);
+        return executeOperationWithArguments(vector, results, "mulVector");
     }
 
+    /**
+     *  Adds the values to this SVMBuffer
+     *  @param values of the addition
+     *  @return the added SVMBuffer
+     */
+    public SVMBuffer add(SVMBuffer values){
+        Type resultType = type.resultOf(values.type);
+        SVMBuffer results = new SVMBuffer(info, length, resultType);
+        return executeOperationWithArguments(values, results, "add");
+    }
+
+    /**
+     *  Adds the values to this SVMBuffer
+     *  @param values of the addition
+     *  @return the added SVMBuffer
+     */
+    public SVMBuffer addInPlace(SVMBuffer values){
+        Type resultType = type.resultOf(values.type);
+        if(this.type != resultType){
+            throw new AssertionError("Cannot change the type of this SVMBuffer from " + this.type + " to " + resultType);
+        }
+        return executeOperationWithArguments(values, this, "add");
+    }
+
+    /**
+     *  subtracts the values SVMBuffer from this SVMBuffer
+     *  @param values of the subtraction
+     *  @return the subtracted SVMBuffer
+     */
+    public SVMBuffer sub(SVMBuffer values){
+        Type resultType = type.resultOf(values.type);
+        SVMBuffer results = new SVMBuffer(info, length, resultType);
+        return executeOperationWithArguments(values, results, "sub");
+    }
+
+    /**
+     *  subtracts the values SVMBuffer from this SVMBuffer
+     *  @param values of the subtraction
+     *  @return the subtracted SVMBuffer
+     */
+    public SVMBuffer subInPlace(SVMBuffer values){
+        Type resultType = type.resultOf(values.type);
+        if(this.type != resultType){
+            throw new AssertionError("Cannot change the type of this SVMBuffer from " + this.type + " to " + resultType);
+        }
+        return executeOperationWithArguments(values, this, "sub");
+    }
+
+    /**
+     *  divides the values SVMBuffer from this SVMBuffer
+     *  @param values of the divisor
+     *  @return the divided SVMBuffer
+     */
+    public SVMBuffer div(SVMBuffer values){
+        Type resultType = type.resultOf(values.type);
+        SVMBuffer results = new SVMBuffer(info, length, resultType);
+        return executeOperationWithArguments(values, results, "div");
+    }
+
+    /**
+     *  divides the values SVMBuffer from this SVMBuffer
+     *  @param values of the divisor
+     *  @return the divided SVMBuffer
+     */
+    public SVMBuffer divInPlace(SVMBuffer values){
+        Type resultType = type.resultOf(values.type);
+        if(this.type != resultType){
+            throw new AssertionError("Cannot change the type of this SVMBuffer from " + this.type + " to " + resultType);
+        }
+        return executeOperationWithArguments(values, this, "div");
+    }
+
+    // TODO Improve this for Matrix multiplication
     /**
      *  Multiplies range of this SVMBuffer with range of factor
      *  @param index1 start index of this SVMBuffer
@@ -381,35 +469,41 @@ public class SVMBuffer {
     }
 
     /**
-     *  TODO
-     *  @param amount TODO
-     *  @return TODO
+     *  Rotates this SVMBuffer to the right
+     *  @param amount to be rotated
+     *  @return the rotated SVMBuffer
      */
     public SVMBuffer ror(int amount){
         SVMBuffer results = new SVMBuffer(info, length, this.type);
-        SVMBufferSupport.Ror(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, results.svmBuffer, amount, this.length);
-        return results;
+        return executeOperationWithArguments(amount, results, "ror");
     }
 
     /**
-     *  TODO
-     *  @param amount TODO
-     *  @return TODO
+     *  Rotates this SVMBuffer to the right
+     *  @param amount to be rotated
+     *  @return the rotated SVMBuffer
+     */
+    public SVMBuffer rorInPlace(int amount){
+        return executeOperationWithArguments(amount, this, "ror");
+    }
+
+    /**
+     *  Rotates this SVMBuffer to the left
+     *  @param amount to be rotated
+     *  @return the rotated SVMBuffer
      */
     public SVMBuffer rol(int amount){
         SVMBuffer results = new SVMBuffer(info, length, this.type);
-        SVMBufferSupport.Rol(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, results.svmBuffer, amount, this.length);
-        return results;
+        return executeOperationWithArguments(amount, results, "rol");
     }
 
     /**
-     *  TODO
-     *  @param amount TODO
-     *  @return TODO
+     *  Rotates this SVMBuffer to the left
+     *  @param amount to be rotated
+     *  @return the rotated SVMBuffer
      */
     public SVMBuffer rolInPlace(int amount){
-        SVMBufferSupport.Rol(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, this.svmBuffer, amount, this.length);
-        return this;
+        return executeOperationWithArguments(amount, this, "rol");
     }
 
     /**
@@ -417,21 +511,28 @@ public class SVMBuffer {
      *  @param factors of the multiplication
      *  @return the multiplied SVMBuffer
      */
-    public SVMBuffer MultiplyInPlaceRepeat(SVMBuffer factors){
-        SVMBufferSupport.MultiplyInPlaceRepeat(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, factors.svmBuffer, factors.length, this.length);
-        return this;
+    public SVMBuffer MultiplyRepeat(SVMBuffer factors){
+        Type resultType = type.resultOf(factors.type);
+        SVMBuffer results = new SVMBuffer(info, length, resultType);
+        return executeOperationWithArguments(factors, results, factors.length, "multiplyRepeat");
     }
 
     /**
-     *  Find the square root of this SVMBuffer
+     *  Multiplies this SVMBuffer with the factors SVMBuffer
+     *  @param factors of the multiplication
+     *  @return the multiplied SVMBuffer
+     */
+    public SVMBuffer MultiplyRepeatInPlace(SVMBuffer factors){
+        return executeOperationWithArguments(factors, this, factors.length, "multiplyRepeat");
+    }
+
+    /**
+     *  Calculates the square root of each element of SVMBuffer
      *  @return the new SVMBuffer containing the square roots
      */
     public SVMBuffer sqrt(){
         SVMBuffer results = new SVMBuffer(info, length, Type.FLOAT);
-
-        SVMBufferSupport.Sqrt(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, results.svmBuffer, this.length);
-
-        return results;
+        return executeOperationWithArguments(results, "sqrt");
     }
 
     /**
@@ -439,9 +540,10 @@ public class SVMBuffer {
      *  @return the new SVMBuffer containing the square roots
      */
     public SVMBuffer sqrtInPlace(){
-        SVMBufferSupport.Sqrt(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, this.svmBuffer, this.length);
-
-        return this;
+        if(this.type != Type.FLOAT){
+            throw new AssertionError("Type of this SVMBuffer is not " + Type.FLOAT);
+        }
+        return executeOperationWithArguments(this, "sqrt");
     }
 
     /**
@@ -458,63 +560,12 @@ public class SVMBuffer {
     }
 
     /**
-     *  Divides this SVMBuffer with the divisor
-     *  @param divisor of the division
-     *  @return the divided SVMBuffer
-     */
-    public SVMBuffer div(float divisor){
-        Type resultType = type.resultOf(Type.FLOAT);
-        SVMBuffer results = new SVMBuffer(info, length, resultType);
-
-        SVMBufferSupport.Division(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, results.svmBuffer, divisor, this.length);
-
-        return results;
-    }
-
-    /**
-     *  Divides this SVMBuffer with the divisor
-     *  @param divisor of the division
-     *  @return the divided SVMBuffer
-     */
-    public SVMBuffer divInPlace(float divisor){
-        SVMBufferSupport.Division(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, this.svmBuffer, divisor, this.length);
-
-        return this;
-    }
-
-    /**
-     *  Divides this SVMBuffer with the divisor SVMBuffer
-     *  @param divisors of the division
-     *  @return the divided SVMBuffer
-     */
-    public SVMBuffer div(SVMBuffer divisors){
-        Type resultType = type.resultOf(divisors.type);
-        SVMBuffer results = new SVMBuffer(info, length, resultType);
-
-        SVMBufferSupport.Division(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, divisors.svmBuffer, results.svmBuffer, this.length);
-
-        return results;
-    }
-
-    /**
-     *  Divides this SVMBuffer with the divisor SVMBuffer
-     *  @param divisors of the division
-     *  @return the divided SVMBuffer
-     */
-    public SVMBuffer divInPlace(SVMBuffer divisors){
-        SVMBufferSupport.Division(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, divisors.svmBuffer, this.svmBuffer, this.length);
-
-        return this;
-    }
-
-    /**
      *  Calculates the natural logarithm of this SVMBuffer
      *  @return the new SVMBuffer containing the natural logarithms
      */
     public SVMBuffer log(){
-        SVMBuffer result = new SVMBuffer(info, length, Type.FLOAT);
-        SVMBufferSupport.Log(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, result.svmBuffer, this.length);
-        return result;
+        SVMBuffer results = new SVMBuffer(info, length, Type.FLOAT);
+        return executeOperationWithArguments(results, "log");
     }
 
     /**
@@ -522,8 +573,10 @@ public class SVMBuffer {
      *  @return this SVMBuffer containing the natural logarithms
      */
     public SVMBuffer logInPlace(){
-        SVMBufferSupport.Log(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, this.svmBuffer, this.length);
-        return this;
+        if(this.type != Type.FLOAT){
+            throw new AssertionError("Type of this SVMBuffer is not " + Type.FLOAT);
+        }
+        return executeOperationWithArguments(this, "log");
     }
 
     /**
@@ -532,8 +585,7 @@ public class SVMBuffer {
      */
     public SVMBuffer cos(){
         SVMBuffer results = new SVMBuffer(info, length, Type.FLOAT);
-        SVMBufferSupport.Cos(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, results.svmBuffer, this.length);
-        return results;
+        return executeOperationWithArguments(results, "cos");
     }
 
     /**
@@ -541,8 +593,10 @@ public class SVMBuffer {
      *  @return this SVMBuffer after applying cos
      */
     public SVMBuffer cosInPlace(){
-        SVMBufferSupport.Cos(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, this.svmBuffer, this.length);
-        return this;
+        if(this.type != Type.FLOAT){
+            throw new AssertionError("Type of this SVMBuffer is not " + Type.FLOAT);
+        }
+        return executeOperationWithArguments(this, "cos");
     }
 
     /**
@@ -551,8 +605,7 @@ public class SVMBuffer {
      */
     public SVMBuffer sin(){
         SVMBuffer results = new SVMBuffer(info, length, Type.FLOAT);
-        SVMBufferSupport.Sin(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, results.svmBuffer, this.length);
-        return results;
+        return executeOperationWithArguments(results, "sin");
     }
 
     /**
@@ -560,8 +613,10 @@ public class SVMBuffer {
      *  @return this SVMBuffer containing the sin
      */
     public SVMBuffer sinInPlace(){
-        SVMBufferSupport.Sin(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, this.svmBuffer, this.length);
-        return this;
+        if(this.type != Type.FLOAT){
+            throw new AssertionError("Type of this SVMBuffer is not " + Type.FLOAT);
+        }
+        return executeOperationWithArguments(this, "sin");
     }
 
     /**
@@ -570,8 +625,7 @@ public class SVMBuffer {
      */
     public SVMBuffer exp(){
         SVMBuffer results = new SVMBuffer(info, length, Type.FLOAT);
-        SVMBufferSupport.Exp(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, results.svmBuffer, this.length);
-        return results;
+        return executeOperationWithArguments(results, "exp");
     }
 
     /**
@@ -579,8 +633,10 @@ public class SVMBuffer {
      *  @return the new SVMBuffer containing the base-e exponentials
      */
     public SVMBuffer expInPlace(){
-        SVMBufferSupport.Exp(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, this.svmBuffer, this.length);
-        return this;
+        if(this.type != Type.FLOAT){
+            throw new AssertionError("Type of this SVMBuffer is not " + Type.FLOAT);
+        }
+        return executeOperationWithArguments(this, "exp");
     }
 
     /**
@@ -589,8 +645,7 @@ public class SVMBuffer {
      */
     public SVMBuffer abs(){
         SVMBuffer results = new SVMBuffer(info, length, this.type);
-        SVMBufferSupport.Abs(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, results.svmBuffer, this.length);
-        return results;
+        return executeOperationWithArguments(results, "abs");
     }
 
     /**
@@ -598,32 +653,28 @@ public class SVMBuffer {
      *  @return the new SVMBuffer containing the absolute values
      */
     public SVMBuffer absInPlace(){
-        SVMBufferSupport.Abs(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, this.svmBuffer, this.length);
-        return this;
+        return executeOperationWithArguments(this, "abs");
     }
 
     /**
-     *  TODO
-     *  @param repetition TODO
-     *  @return TODO
+     *  Creates a new SVMBuffer which repeats this full buffer repetition times
+     *  @param repetition the amount of repetitions
+     *  @return the new SVMBuffer
      */
-    public SVMBuffer repeat1(int repetition){
+    public SVMBuffer repeatFullBuffer(int repetition){
         SVMBuffer results = new SVMBuffer(info, length * repetition, this.type);
-        SVMBufferSupport.Repeat1(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, results.svmBuffer, repetition, length);
-        return results;
+        return executeOperationWithArguments(repetition, results, "repeatFull", this.length);
     }
 
     /**
-     *  TODO
-     *  @param repetition TODO
-     *  @return TODO
+     *  Creates a new SVMBuffer which repeats each number of this buffer repetition times
+     *  @param repetition the amount of repetitions
+     *  @return the new SVMBuffer
      */
-    public SVMBuffer repeat2(int repetition){
+    public SVMBuffer repeatEachNumber(int repetition){
         SVMBuffer results = new SVMBuffer(info, length * repetition, this.type);
-        SVMBufferSupport.Repeat2(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, results.svmBuffer, repetition, length);
-        return results;
+        return executeOperationWithArguments(repetition, results, "repeatEachNumber", this.length);
     }
-
 
     /**
      *  Stores this SVMBuffer into an Array of type {@code int[]}
@@ -652,23 +703,27 @@ public class SVMBuffer {
     }
 
     /**
-     *  Deallocates the Memory of this SVMBuffer
+     *  Stores this SVMBuffer into an Array of type {@code int[]}
+     *  @param array the array of type {@code int[]}
+     *  @param length to be moved to the array
+     *  @param offset of the first element
      */
-    public void releaseSVMBuffer() {
-        SVMBufferSupport.ReleaseSVMBuffer(info.GetContext(), info.GetCommandQueue(), this.svmBuffer);
-        this.svmBuffer = 0;
-        this.length = 0;
+    public void intoArray(int[] array,  int offset, int length) {
+        SVMBufferSupport.CopyToArray(info.GetContext(), info.GetCommandQueue(), this.svmBuffer, array, this.length, length, offset);
     }
 
     /**
      *  Deallocates the Memory of this SVMBuffer
      */
-    public void releaseSVMBufferInt() {
-        SVMBufferSupport.ReleaseSVMBufferInt(info.GetContext(), info.GetCommandQueue(), this.svmBuffer);
+    public void releaseSVMBuffer() {
+        if (type == Type.FLOAT){
+            SVMBufferSupport.ReleaseSVMBuffer(info.GetContext(), info.GetCommandQueue(), this.svmBuffer);
+        } else {
+            SVMBufferSupport.ReleaseSVMBufferInt(info.GetContext(), info.GetCommandQueue(), this.svmBuffer);
+        }
         this.svmBuffer = 0;
         this.length = 0;
     }
-
 
     /**
      *  Compares each value of this svmBuffer if it is greater than the comparee
@@ -677,8 +732,17 @@ public class SVMBuffer {
      */
     public SVMBuffer compareGT(float comparee){
         SVMBuffer results = new SVMBuffer(info, length, Type.FLOAT);
-        SVMBufferSupport.CompareGT(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, comparee, results.svmBuffer, this.length);
-        return results;
+        return executeOperationWithArguments(comparee, results, "compareGT");
+    }
+
+    /**
+     *  Compares each value of this svmBuffer if it is greater than the comparee
+     *  @param comparee of the greater than comparison
+     *  @return the mask of the greater than comparison
+     */
+    public SVMBuffer compareGT(int comparee){
+        SVMBuffer results = new SVMBuffer(info, length, Type.FLOAT);
+        return executeOperationWithArguments(comparee, results, "compareGT");
     }
 
     /**
@@ -709,9 +773,12 @@ public class SVMBuffer {
      *  @param amount to be shifted
      *  @return this SVMBuffer
      */
-    public SVMBuffer ashrInPlace(int amount) {
-        SVMBufferSupport.Ashr(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, this.svmBuffer, amount, this.length);
-        return this;
+    public SVMBuffer ashr(int amount) {
+        if(this.type != Type.INT){
+            throw new AssertionError("Type of this SVMBuffer is not " + Type.INT);
+        }
+        SVMBuffer results = new SVMBuffer(info, length, this.type);
+        return executeOperationWithArguments(amount, results, "ashr");
     }
 
     /**
@@ -719,10 +786,11 @@ public class SVMBuffer {
      *  @param amount to be shifted
      *  @return this SVMBuffer
      */
-    public SVMBuffer ashr(int amount) {
-        SVMBuffer results = new SVMBuffer(info, length, this.type);
-        SVMBufferSupport.Ashr(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, results.svmBuffer, amount, this.length);
-        return results;
+    public SVMBuffer ashrInPlace(int amount) {
+        if(this.type != Type.INT){
+            throw new AssertionError("Type of this SVMBuffer is not " + Type.INT);
+        }
+        return executeOperationWithArguments(amount, this, "ashr");
     }
 
     /**
@@ -731,9 +799,11 @@ public class SVMBuffer {
      *  @return this SVMBuffer
      */
     public SVMBuffer lshl(int amount) {
+        if(this.type != Type.INT){
+            throw new AssertionError("Type of this SVMBuffer is not " + Type.INT);
+        }
         SVMBuffer results = new SVMBuffer(info, length, this.type);
-        SVMBufferSupport.Lshl(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, results.svmBuffer, amount, this.length);
-        return results;
+        return executeOperationWithArguments(amount, results, "lshl");
     }
 
     /**
@@ -742,8 +812,10 @@ public class SVMBuffer {
      *  @return this SVMBuffer
      */
     public SVMBuffer lshlInPlace(int amount) {
-        SVMBufferSupport.Lshl(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, this.svmBuffer, amount, this.length);
-        return this;
+        if(this.type != Type.INT){
+            throw new AssertionError("Type of this SVMBuffer is not " + Type.INT);
+        }
+        return executeOperationWithArguments(amount, this, "lshl");
     }
 
     /**
@@ -752,30 +824,98 @@ public class SVMBuffer {
      *  @return the resulting SVMBuffer
      */
     public SVMBuffer and(int value){
+        if(this.type != Type.INT){
+            throw new AssertionError("Type of this SVMBuffer is not " + Type.INT);
+        }
         SVMBuffer results = new SVMBuffer(info, length, this.type);
-        SVMBufferSupport.And(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, results.svmBuffer, value, this.length);
-        return results;
+        return executeOperationWithArguments(value, results, "and");
+    }
+
+    /**
+     *  Bitwise and of this SVMBuffer
+     *  @param value for the bitwise and
+     *  @return the resulting SVMBuffer
+     */
+    public SVMBuffer andInPlace(int value){
+        if(this.type != Type.INT){
+            throw new AssertionError("Type of this SVMBuffer is not " + Type.INT);
+        }
+        return executeOperationWithArguments(value, this, "and");
+    }
+
+    /**
+     *  Bitwise and of this SVMBuffer
+     *  @param value for the bitwise and
+     *  @return the resulting SVMBuffer
+     */
+    public SVMBuffer and(SVMBuffer value){
+        if(this.type != Type.INT || value.type != Type.INT ){
+            throw new AssertionError("Type of this SVMBuffer or the argument is not " + Type.INT);
+        }
+        SVMBuffer results = new SVMBuffer(info, length, this.type);
+        return executeOperationWithArguments(value, results, "and");
+    }
+
+    /**
+     *  Bitwise and of this SVMBuffer
+     *  @param value for the bitwise and
+     *  @return the resulting SVMBuffer
+     */
+    public SVMBuffer andInPlace(SVMBuffer value){
+        if(this.type != Type.INT || value.type != Type.INT ){
+            throw new AssertionError("Type of this SVMBuffer or the argument is not " + Type.INT);
+        }
+        return executeOperationWithArguments(value, this, "and");
+    }
+
+    /**
+     *  Bitwise and of this SVMBuffer
+     *  @param value for the bitwise and
+     *  @return the resulting SVMBuffer
+     */
+    public SVMBuffer or(int value){
+        if(this.type != Type.INT){
+            throw new AssertionError("Type of this SVMBuffer is not " + Type.INT);
+        }
+        SVMBuffer results = new SVMBuffer(info, length, this.type);
+        return executeOperationWithArguments(value, results, "or");
+    }
+
+    /**
+     *  Bitwise and of this SVMBuffer
+     *  @param value for the bitwise and
+     *  @return the resulting SVMBuffer
+     */
+    public SVMBuffer orInPlace(int value){
+        if(this.type != Type.INT){
+            throw new AssertionError("Type of this SVMBuffer is not " + Type.INT);
+        }
+        return executeOperationWithArguments(value, this, "or");
     }
 
     /**
      *  Bitwise or of this SVMBuffer
-     *  @param other for the bitwise or
+     *  @param value for the bitwise or
      *  @return the resulting SVMBuffer
      */
-    public SVMBuffer orInPlace(SVMBuffer other){
-        SVMBufferSupport.Or(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, other.svmBuffer, this.svmBuffer, this.length);
-        return this;
+    public SVMBuffer or(SVMBuffer value){
+        if(this.type != Type.INT || value.type != Type.INT ){
+            throw new AssertionError("Type of this SVMBuffer or the argument is not " + Type.INT);
+        }
+        SVMBuffer results = new SVMBuffer(info, length, this.type);
+        return executeOperationWithArguments(value, results, "or");
     }
 
     /**
      *  Bitwise or of this SVMBuffer
-     *  @param other for the bitwise or
+     *  @param value for the bitwise or
      *  @return the resulting SVMBuffer
      */
-    public SVMBuffer or(SVMBuffer other){
-        SVMBuffer results = new SVMBuffer(info, length, this.type);
-        SVMBufferSupport.Or(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, other.svmBuffer, results.svmBuffer, this.length);
-        return results;
+    public SVMBuffer orInPlace(SVMBuffer value){
+        if(this.type != Type.INT || value.type != Type.INT ){
+            throw new AssertionError("Type of this SVMBuffer or the argument is not " + Type.INT);
+        }
+        return executeOperationWithArguments(value, this, "or");
     }
 
     /**
@@ -784,9 +924,11 @@ public class SVMBuffer {
      *  @return the max values
      */
     public SVMBuffer max(float value){
+        if(this.type != Type.FLOAT){
+            throw new AssertionError("Type of this SVMBuffer is not " + Type.FLOAT);
+        }
         SVMBuffer results = new SVMBuffer(info, length, this.type);
-        SVMBufferSupport.Max(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, results.svmBuffer, value, this.length);
-        return results;
+        return executeOperationWithArguments(value, results, "max");
     }
 
     /**
@@ -795,29 +937,85 @@ public class SVMBuffer {
      *  @return the max values
      */
     public SVMBuffer maxInPlace(float value){
-        SVMBufferSupport.Max(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, this.svmBuffer, value, this.length);
-        return this;
+        if(this.type != Type.FLOAT){
+            throw new AssertionError("Type of this SVMBuffer is not " + Type.FLOAT);
+        }
+        return executeOperationWithArguments(value, this, "max");
     }
 
     /**
      *  Get max values of this SVMBuffer and value
      *  @param value max value
      *  @return the max values
+     */
+    public SVMBuffer max(int value){
+        if(this.type != Type.INT){
+            throw new AssertionError("Type of this SVMBuffer is not " + Type.INT);
+        }
+        SVMBuffer results = new SVMBuffer(info, length, this.type);
+        return executeOperationWithArguments(value, results, "max");
+    }
+
+    /**
+     *  Get max values of this SVMBuffer and value
+     *  @param value max value
+     *  @return the max values
+     */
+    public SVMBuffer maxInPlace(int value){
+        if(this.type != Type.INT){
+            throw new AssertionError("Type of this SVMBuffer is not " + Type.INT);
+        }
+        return executeOperationWithArguments(value, this, "max");
+    }
+
+    /**
+     *  Get min values of this SVMBuffer and value
+     *  @param value min value
+     *  @return the min values
      */
     public SVMBuffer min(float value){
+        if(this.type != Type.FLOAT){
+            throw new AssertionError("Type of this SVMBuffer is not " + Type.FLOAT);
+        }
         SVMBuffer results = new SVMBuffer(info, length, this.type);
-        SVMBufferSupport.Min(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, results.svmBuffer, value, this.length);
-        return results;
+        return executeOperationWithArguments(value, results, "min");
     }
 
     /**
-     *  Get max values of this SVMBuffer and value
-     *  @param value max value
-     *  @return the max values
+     *  Get min values of this SVMBuffer and value
+     *  @param value min value
+     *  @return the min values
      */
     public SVMBuffer minInPlace(float value){
-        SVMBufferSupport.Min(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, this.svmBuffer, value, this.length);
-        return this;
+        if(this.type != Type.FLOAT){
+            throw new AssertionError("Type of this SVMBuffer is not " + Type.FLOAT);
+        }
+        return executeOperationWithArguments(value, this, "min");
+    }
+
+    /**
+     *  Get min values of this SVMBuffer and value
+     *  @param value min value
+     *  @return the min values
+     */
+    public SVMBuffer min(int value){
+        if(this.type != Type.INT){
+            throw new AssertionError("Type of this SVMBuffer is not " + Type.INT);
+        }
+        SVMBuffer results = new SVMBuffer(info, length, this.type);
+        return executeOperationWithArguments(value, results, "min");
+    }
+
+    /**
+     *  Get min values of this SVMBuffer and value
+     *  @param value min value
+     *  @return the min values
+     */
+    public SVMBuffer minInPlace(int value){
+        if(this.type != Type.INT){
+            throw new AssertionError("Type of this SVMBuffer is not " + Type.INT);
+        }
+        return executeOperationWithArguments(value, this, "min");
     }
 
     /**
@@ -854,32 +1052,95 @@ public class SVMBuffer {
         return new SVMBuffer(info, results);
     }
 
-    /**
-     *  Calculates the DFT on the GPU using a specified OpenCL kernel
-     *  @param info for the gpu
-     *  @param b1 input real SVMBuffer
-     *  @param b2 output real SVMBuffer
-     *  @param b3 input imag SVMBuffer
-     *  @param b4 output imag SVMBuffer
-     */
-    public static void DFT(GPUInformation info, SVMBuffer b1, SVMBuffer b2, SVMBuffer b3, SVMBuffer b4){
-        SVMBufferSupport.DFT(info.GetProgram(), info.GetCommandQueue(), b1.svmBuffer, b2.svmBuffer, b3.svmBuffer, b4.svmBuffer, b1.length);
+    private <T extends Number> SVMBuffer executeOperationWithArguments(T value, SVMBuffer results, String kernelName){
+        return executeOperationWithArguments(value, results, kernelName, results.length);
     }
 
-    /**
-     *  Calculates the BlackScholes on the GPU using a specified OpenCL kernel
-     *  @param info of the gpu
-     *  @param sig sig
-     *  @param r r
-     *  @param xBuffer x
-     *  @param callBuffer call
-     *  @param putBuffer put
-     *  @param tBuffer t
-     *  @param s0Buffer s0
-     */
-    public static void BlackScholes(GPUInformation info, float sig, float r, SVMBuffer xBuffer, SVMBuffer callBuffer, SVMBuffer putBuffer, SVMBuffer tBuffer, SVMBuffer s0Buffer){
+    private <T extends Number> SVMBuffer executeOperationWithArguments(T value, SVMBuffer results, String kernelName, int globalSize){
+        var primitiveType = Type.fromNumber(value);
+        kernelName += this.type.toString() + primitiveType.toString() + results.type.toString();
+        // System.out.println(kernelName);
+        switch(this.type) {
+            case Type.FLOAT:
+                if (primitiveType == Type.FLOAT) {
+                    SVMBufferSupport.executeKernelWithTypesFFF(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, (float)value, results.svmBuffer, globalSize, kernelName);
+                } else {
+                    SVMBufferSupport.executeKernelWithTypesFIF(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, (int)value, results.svmBuffer, globalSize, kernelName);
+                }
+                break;
+            case Type.INT:
+                if (primitiveType == Type.FLOAT) {
+                    SVMBufferSupport.executeKernelWithTypesIFF(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, (float)value, results.svmBuffer, globalSize, kernelName);
+                } else {
+                    SVMBufferSupport.executeKernelWithTypesIII(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, (int)value, results.svmBuffer, globalSize, kernelName);
+                }
+                break;
+            default: throw new AssertionError("Invalid operation type");
+        }
+        return results;
+    }
 
-        SVMBufferSupport.BlackScholes(info.GetProgram(), info.GetCommandQueue(), sig, r, xBuffer.svmBuffer, callBuffer.svmBuffer, putBuffer.svmBuffer, tBuffer.svmBuffer, s0Buffer.svmBuffer, xBuffer.length);
+    private SVMBuffer executeOperationWithArguments(SVMBuffer results, String kernelName){
+        return executeOperationWithArguments(results, kernelName, results.length);
+    }
+
+    private SVMBuffer executeOperationWithArguments(SVMBuffer results, String kernelName, int globalSize){
+        kernelName += "Buffer" + this.type.toString() + results.type.toString();
+        // System.out.println(kernelName);
+        if(this.type == Type.FLOAT && results.type == Type.FLOAT){
+            SVMBufferSupport.executeKernelWithTypesBufferFF(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, results.svmBuffer, globalSize, kernelName);
+        } else if(this.type == Type.FLOAT && results.type == Type.INT){
+            SVMBufferSupport.executeKernelWithTypesBufferFI(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, results.svmBuffer, globalSize, kernelName);
+        } else if (this.type == Type.INT && results.type == Type.FLOAT){
+            SVMBufferSupport.executeKernelWithTypesBufferIF(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, results.svmBuffer, globalSize, kernelName);
+        } else if(this.type == Type.INT && results.type == Type.INT){
+            SVMBufferSupport.executeKernelWithTypesBufferII(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, results.svmBuffer, globalSize, kernelName);
+        } else {
+            throw new IllegalArgumentException("Invalid operation types");
+        }
+        return results;
+    }
+
+    private SVMBuffer executeOperationWithArguments(SVMBuffer values, SVMBuffer results, int number, String kernelName){
+        return executeOperationWithArguments(values, results, number, kernelName, results.length);
+    }
+
+    private SVMBuffer executeOperationWithArguments(SVMBuffer values, SVMBuffer results, int number, String kernelName, int globalSize){
+        kernelName += "Buffer" + this.type.toString() + values.type.toString() + results.type.toString();
+        // System.out.println(kernelName);
+        if(this.type == Type.FLOAT && values.type == Type.FLOAT){
+            SVMBufferSupport.executeKernelWithTypesBufferFFFI(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, values.svmBuffer, results.svmBuffer, number, globalSize, kernelName);
+        } else if(this.type == Type.FLOAT && values.type == Type.INT){
+            SVMBufferSupport.executeKernelWithTypesBufferFIFI(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, values.svmBuffer, results.svmBuffer, number, globalSize, kernelName);
+        } else if (this.type == Type.INT && values.type == Type.FLOAT){
+            SVMBufferSupport.executeKernelWithTypesBufferIFFI(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, values.svmBuffer, results.svmBuffer, number, globalSize, kernelName);
+        } else if(this.type == Type.INT && values.type == Type.INT){
+            SVMBufferSupport.executeKernelWithTypesBufferIIII(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, values.svmBuffer, results.svmBuffer, number, globalSize, kernelName);
+        } else {
+            throw new IllegalArgumentException("Invalid operation types");
+        }
+        return results;
+    }
+
+    private SVMBuffer executeOperationWithArguments(SVMBuffer values, SVMBuffer results, String kernelName){
+        return executeOperationWithArguments(values, results, kernelName, results.length);
+    }
+
+    private SVMBuffer executeOperationWithArguments(SVMBuffer values, SVMBuffer results, String kernelName, int globalSize){
+        kernelName += "Buffer" + this.type.toString() + values.type.toString() + results.type.toString();
+        // System.out.println(kernelName);
+        if(this.type == Type.FLOAT && values.type == Type.FLOAT){
+            SVMBufferSupport.executeKernelWithTypesBufferFFF(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, values.svmBuffer, results.svmBuffer, globalSize, kernelName);
+        } else if(this.type == Type.FLOAT && values.type == Type.INT){
+            SVMBufferSupport.executeKernelWithTypesBufferFIF(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, values.svmBuffer, results.svmBuffer, globalSize, kernelName);
+        } else if (this.type == Type.INT && values.type == Type.FLOAT){
+            SVMBufferSupport.executeKernelWithTypesBufferIFF(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, values.svmBuffer, results.svmBuffer, globalSize, kernelName);
+        } else if(this.type == Type.INT && values.type == Type.INT){
+            SVMBufferSupport.executeKernelWithTypesBufferIII(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, values.svmBuffer, results.svmBuffer, globalSize, kernelName);
+        } else {
+            throw new IllegalArgumentException("Invalid operation types");
+        }
+        return results;
     }
 
 
@@ -908,6 +1169,13 @@ public class SVMBuffer {
 
         private Type resultOf(Type other){
             if(this.type == Float.TYPE || other.getType() == Float.TYPE){
+                return Type.FLOAT;
+            }
+            return Type.INT;
+        }
+
+        private static <T extends Number> Type fromNumber(T value){
+            if(Float.class.isInstance(value)){
                 return Type.FLOAT;
             }
             return Type.INT;

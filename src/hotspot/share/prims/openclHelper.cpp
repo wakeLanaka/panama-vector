@@ -79,9 +79,9 @@ const char *getOpenCLError(cl_int error) {
       }
 }
 
-void handleError(cl_int value, const char * errorString) {
+void handleError(cl_int value, const char * errorString, const char * kernelName) {
   if (value != CL_SUCCESS) {
-    fatal("OpenCL Error %s(%s)", errorString, getOpenCLError(value));
+    fatal("OpenCL Error[%s]: %s(%s)", kernelName, errorString, getOpenCLError(value));
   }
 }
 

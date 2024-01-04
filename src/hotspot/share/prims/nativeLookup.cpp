@@ -208,7 +208,6 @@ extern "C" {
   void JNICALL JVM_RegisterPerfMethods(JNIEnv *env, jclass perfclass);
   void JNICALL JVM_RegisterWhiteBoxMethods(JNIEnv *env, jclass wbclass);
   void JNICALL JVM_RegisterVectorSupportMethods(JNIEnv *env, jclass vsclass);
-  void JNICALL JVM_RegisterGPUSupportMethods(JNIEnv *env, jclass vsclass);
   void JNICALL JVM_RegisterSVMBufferSupportMethods(JNIEnv *env, jclass vsclass);
 #if INCLUDE_JVMCI
   jobject  JNICALL JVM_GetJVMCIRuntime(JNIEnv *env, jclass c);
@@ -230,7 +229,6 @@ static JNINativeMethod lookup_special_native_methods[] = {
   { CC"Java_sun_hotspot_WhiteBox_registerNatives",                 nullptr, FN_PTR(JVM_RegisterWhiteBoxMethods)     },
   { CC"Java_jdk_test_whitebox_WhiteBox_registerNatives",           nullptr, FN_PTR(JVM_RegisterWhiteBoxMethods)     },
   { CC"Java_jdk_internal_vm_vector_VectorSupport_registerNatives", nullptr, FN_PTR(JVM_RegisterVectorSupportMethods)},
-  { CC"Java_jdk_internal_vm_vector_GPUSupport_registerNatives", nullptr, FN_PTR(JVM_RegisterGPUSupportMethods)},
   { CC"Java_jdk_internal_vm_vector_SVMBufferSupport_registerNatives", nullptr, FN_PTR(JVM_RegisterSVMBufferSupportMethods)},
 #if INCLUDE_JVMCI
   { CC"Java_jdk_vm_ci_runtime_JVMCI_initializeRuntime",            nullptr, FN_PTR(JVM_GetJVMCIRuntime)             },

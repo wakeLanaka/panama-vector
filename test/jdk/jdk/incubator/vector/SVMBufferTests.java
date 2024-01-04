@@ -600,7 +600,7 @@ public class SVMBufferTests {
     }
 
     private static void SumReduceFloat(SVMBuffer buffer) throws Exception {
-        var result = (int)buffer.sumReduce();
+        var result = (int)buffer.sumReduceFloat();
 
         if (Math.abs(result - SVMBufferTests.size) > SVMBufferTests.delta) {
             throw new RuntimeException("SumReduce is: " + result + ", expected: " + SVMBufferTests.size);

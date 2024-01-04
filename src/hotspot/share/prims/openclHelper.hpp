@@ -5,7 +5,7 @@
 #include "CL/cl.h"
 
 const char *getOpenCLError(cl_int error);
-void handleError(cl_int value, const char * errorString);
+void handleError(cl_int value, const char * errorString, const char * kernelName);
 unsigned int verifyZeroCopyPtr(void *ptr, unsigned int sizeOfContentsOfPtr);
 
 #endif // SHARE_PRIMS_OPENCLHELPER_HPP
