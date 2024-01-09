@@ -134,12 +134,12 @@ public class SVMBuffer {
     }
 
     /**
-     *  Calculates the FMA of this SVMBuffer with the 
-     *  @param factor TODO
-     *  @param width TODO
-     *  @param kernelWidth TODO
-     *  @param resultLength TODO
-     *  @return sumand of fma
+     *  Calculates the FMA for each element of this SVMBuffer with the factor
+     *  @param factor for the fma
+     *  @param width of the matrix of this SVMBuffer
+     *  @param kernelWidth of the factor
+     *  @param resultLength of the resulting fma
+     *  @return the new SVMBuffer
      */
     public SVMBuffer eachAreaFMA(SVMBuffer factor, int width, int kernelWidth, int resultLength) {
         Type resultType = type.resultOf(factor.type);
@@ -555,6 +555,19 @@ public class SVMBuffer {
      */
     public static SVMBuffer broadcast(GPUInformation info, float value, int length) {
         float[] array = new float[length];
+        Arrays.fill(array, value);
+        return new SVMBuffer(info, array);
+    }
+
+    /**
+     *  Creates a new SVMBuffer initialized with @param value
+     *  @param info for the gpu
+     *  @param value of the elements
+     *  @param length of the SVMBuffer
+     *  @return initialized SVMBuffer
+     */
+    public static SVMBuffer broadcast(GPUInformation info, int value, int length) {
+        int[] array = new int[length];
         Arrays.fill(array, value);
         return new SVMBuffer(info, array);
     }

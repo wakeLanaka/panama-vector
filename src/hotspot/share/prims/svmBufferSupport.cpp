@@ -305,7 +305,7 @@ JVM_ENTRY(jlong, SVMBufferSupport_copyFromArray(JNIEnv *env, jclass vsclazz, jlo
   const jsize length = env->GetArrayLength(jArray);
   const char * name = "copyFromArray";
 
-  int * svmBuffer = (int *) clSVMAlloc((cl_context)clContext, CL_MEM_READ_ONLY, sizeof(int) * length, 0);
+  int * svmBuffer = (int *) clSVMAlloc(clContext, CL_MEM_READ_ONLY, sizeof(int) * length, 0);
   int * jarrayElements = env->GetIntArrayElements(jArray, 0);
   error = clEnqueueSVMMap(clCommandQueue, CL_TRUE, CL_MAP_READ, svmBuffer, sizeof(int) * length, 0, 0, NULL);
   handleError(error, "clEnqueueSVMMap", name);
