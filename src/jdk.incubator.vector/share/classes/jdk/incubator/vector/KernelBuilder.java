@@ -91,10 +91,9 @@ public class KernelBuilder {
      *  @return new KernelBuilder representing the buffer
      */
     public KernelStatement Var(SVMBuffer buffer){
-        // TODO change type
-        var variableName = getVariableName(buffer);
-        var statement = new KernelStatement(Float.TYPE, this.kernelString, variableName + "[i]");
-        return statement;
+        var bufferVariable = getVariableName(buffer);
+        var rhs = bufferVariable + "[i]";
+        return new KernelStatement(Float.TYPE, this.kernelString, rhs);
     }
 
     /**
@@ -125,6 +124,7 @@ public class KernelBuilder {
     public void ExecKernel(GPUInformation info, StringBuilder kernelString){
         if (this.program == 0){
             createKernel(kernelString, this.objectVariables.keySet());
+            // System.out.println(kernelString.toString());
             this.program = SVMBufferSupport.CreateProgram(info.GetContext(), kernelString.toString());
         }
 
@@ -150,7 +150,7 @@ public class KernelBuilder {
                 case SVMBuffer buffer -> kernelSignature += "__global float * " + this.getVariableName(obj) + ",";
                 case Float value -> kernelSignature += "float " + this.getVariableName(obj) + ",";
                 case Integer value -> kernelSignature += "int " + this.getVariableName(obj) + ",";
-                default -> {}
+                default -> throw new AssertionError("Object is not of a supported type");
             }
         }
         kernelSignature = kernelSignature.substring(0, kernelSignature.length() - 1) + ")";
@@ -170,7 +170,7 @@ public class KernelBuilder {
             case SVMBuffer buffer -> { SVMBufferSupport.SetKernelArgument(kernel, buffer.svmBuffer, argumentNumber);}
             case Integer value -> { SVMBufferSupport.SetKernelArgument(kernel, value.intValue(), argumentNumber);}
             case Float value -> { SVMBufferSupport.SetKernelArgument(kernel, value.floatValue(), argumentNumber);}
-            default -> System.out.println("Error");
+            default -> throw new AssertionError("Object is not of a supported type");
         }
     }
 
@@ -417,7 +417,6 @@ public class KernelBuilder {
         public KernelStatement Add(SVMBuffer value){
             var bufferVariable = getVariableName(value);
             var rhs = this.localName + " + " + bufferVariable + "[i]";
-            // TODO change type
             var resultType = getType(this.type, Float.TYPE);
             return new KernelStatement(resultType, this.kernelString, rhs);
         }

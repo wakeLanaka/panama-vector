@@ -402,7 +402,7 @@ JVM_ENTRY(void, SVMBufferSupport_copyToFloatArray(JNIEnv *env, jclass vsclazz, j
   const cl_command_queue clCommandQueue = (cl_command_queue)jCommandQueue;
 
   const jsize length = env->GetArrayLength(jArray);
-  const char * name = "copyToIntArray";
+  const char * name = "copyToFloatArray";
 
   float* clBuffer = (float *)jBuffer;
 
@@ -923,7 +923,7 @@ JVM_ENTRY(void, ExecBufferSupport_setKernelArgumentSVMBuffer(JNIEnv *env, jclass
   const int clArgumentNumber = (int)argumentNumber;
 
   error = clSetKernelArgSVMPointer(clKernel, clArgumentNumber, clBuffer);
-  handleError(error, "clSetKernelArg", "exec");
+  handleError(error, "clSetKernelArg", "kernelBuilder");
 } JVM_END
 
 JVM_ENTRY(void, ExecBufferSupport_setKernelArgumentInteger(JNIEnv *env, jclass vsclazz, jlong jKernel, jint value, jint argumentNumber)) {

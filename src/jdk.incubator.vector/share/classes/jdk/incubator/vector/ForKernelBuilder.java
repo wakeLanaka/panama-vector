@@ -55,7 +55,7 @@ public class ForKernelBuilder {
      */
     public void End(){
         StringBuilder forSignature = new StringBuilder("for(int " + index.getIndex() + " = " + offset + "; " + index.getIndex() + " < " + limit + "; " + index.getIndex() + " +=" + step + "){");
-        System.out.println("End:\t" + this.body.getKernelString());
+        // System.out.println("End:\t" + this.body.getKernelString());
         forSignature.append(this.body.getKernelString() + "}");
         this.body.ExecKernel(info, forSignature);
     }
