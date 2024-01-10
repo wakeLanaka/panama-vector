@@ -39,14 +39,15 @@ public class ForKernelBuilder {
 
     /**
      *  FactoryMethod for creating ForKernelBuilder objects
+     *  @param workItems amount of workItems
      *  @param offset of the for-loop
      *  @param limit of the for-loop
      *  @param step after each for-loop iteration
      *  @return new ForKernelBuilder
      */
-    public static ForKernelBuilder For(int offset, int limit, int step){
+    public static ForKernelBuilder For(int workItems, int offset, int limit, int step){
         var fkb = new ForKernelBuilder(offset, limit, step);
-        fkb.body = new KernelBuilder(limit);
+        fkb.body = new KernelBuilder(workItems);
         return fkb;
     }
 
@@ -55,7 +56,6 @@ public class ForKernelBuilder {
      */
     public void End(){
         StringBuilder forSignature = new StringBuilder("for(int " + index.getIndex() + " = " + offset + "; " + index.getIndex() + " < " + limit + "; " + index.getIndex() + " +=" + step + "){");
-        // System.out.println("End:\t" + this.body.getKernelString());
         forSignature.append(this.body.getKernelString() + "}");
         this.body.ExecKernel(info, forSignature);
     }

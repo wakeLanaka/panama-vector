@@ -97,6 +97,18 @@ public class KernelBuilder {
     }
 
     /**
+     *  Creates a new variable representing the buffer element
+     *  @param buffer containing the elements
+     *  @param index of the element
+     *  @return new KernelBuilder representing the buffer
+     */
+    public KernelStatement Var(SVMBuffer buffer, String index){
+        var bufferVariable = getVariableName(buffer);
+        var rhs = bufferVariable + "[" + index + "]";
+        return new KernelStatement(Float.TYPE, this.kernelString, rhs);
+    }
+
+    /**
      *  Creates a new variable representing the value
      *  @param value of the variable
      *  @return new KernelBuilder representing the variable
@@ -124,7 +136,7 @@ public class KernelBuilder {
     public void ExecKernel(GPUInformation info, StringBuilder kernelString){
         if (this.program == 0){
             createKernel(kernelString, this.objectVariables.keySet());
-            // System.out.println(kernelString.toString());
+            System.out.println(kernelString.toString());
             this.program = SVMBufferSupport.CreateProgram(info.GetContext(), kernelString.toString());
         }
 
@@ -197,13 +209,17 @@ public class KernelBuilder {
     *  Adds and Assigns builder to buffer
     *  @param buffer to be set
     *  @param builder right hand side of the addition assignment operator
-    *  @return new KernelStatement representing the addition assignment operator
-        // TODO change this
     */
-    public KernelBuilder AddAssign(SVMBuffer buffer, KernelStatement builder){
+    public void AddAssign(SVMBuffer buffer, KernelStatement builder){
         var bufferVariable = getVariableName(buffer);
-        this.kernelString.append(bufferVariable + "[i] += " + builder.localName + ";");
-        return this;
+        // System.out.println(bufferVariable);
+        this.kernelString.append(bufferVariable);
+        this.kernelString.append("[i] += ");
+        this.kernelString.append(builder.localName);
+        this.kernelString.append(";");
+
+        // this.kernelString.append(bufferVariable + "[i] += " + builder.localName + ";");
+        // System.out.println(this.kernelString);
     }
 
     /**
@@ -257,7 +273,6 @@ public class KernelBuilder {
         public KernelStatement Mul(SVMBuffer buffer){
             var bufferVariable = getVariableName(buffer);
             var rhs = this.localName + " * " + bufferVariable + "[i]";
-            // TODO change Type
             var resultType = getType(this.type, Float.TYPE);
             return new KernelStatement(resultType, this.kernelString, rhs);
         }
@@ -286,6 +301,20 @@ public class KernelBuilder {
         public KernelStatement Mul(SVMBuffer buffer, KernelIndex index){
             var bufferVariable = getVariableName(buffer);
             var rhs = this.localName + " * " + bufferVariable + "["+ index.getIndex() + "]";
+            // TODO change Type
+            var resultType = getType(this.type, Float.TYPE);
+            return new KernelStatement(resultType, this.kernelString, rhs);
+        }
+
+        /**
+        *  Multiplies this with the buffer element
+        *  @param buffer containing the values
+        *  @param index accessing the buffer
+        *  @return new KernelStatement representing the multiplication
+        */
+        public KernelStatement Mul(SVMBuffer buffer, String index){
+            var bufferVariable = getVariableName(buffer);
+            var rhs = this.localName + " * " + bufferVariable + "["+ index + "]";
             // TODO change Type
             var resultType = getType(this.type, Float.TYPE);
             return new KernelStatement(resultType, this.kernelString, rhs);
