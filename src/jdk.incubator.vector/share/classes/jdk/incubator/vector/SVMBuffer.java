@@ -452,7 +452,6 @@ public class SVMBuffer {
         return executeOperationWithArguments(values, this, "div");
     }
 
-    // TODO Improve this for Matrix multiplication
     /**
      *  Multiplies range of this SVMBuffer with range of factor
      *  @param index1 start index of this SVMBuffer
@@ -1072,7 +1071,6 @@ public class SVMBuffer {
     private <T extends Number> SVMBuffer executeOperationWithArguments(T value, SVMBuffer results, String kernelName, int globalSize){
         var primitiveType = Type.fromNumber(value);
         kernelName += this.type.toString() + primitiveType.toString() + results.type.toString();
-        // System.out.println(kernelName);
         switch(this.type) {
             case Type.FLOAT:
                 if (primitiveType == Type.FLOAT) {
@@ -1099,7 +1097,6 @@ public class SVMBuffer {
 
     private SVMBuffer executeOperationWithArguments(SVMBuffer results, String kernelName, int globalSize){
         kernelName += "Buffer" + this.type.toString() + results.type.toString();
-        // System.out.println(kernelName);
         if(this.type == Type.FLOAT && results.type == Type.FLOAT){
             SVMBufferSupport.executeKernelWithTypesBufferFF(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, results.svmBuffer, globalSize, kernelName);
         } else if(this.type == Type.FLOAT && results.type == Type.INT){
@@ -1120,7 +1117,6 @@ public class SVMBuffer {
 
     private SVMBuffer executeOperationWithArguments(SVMBuffer values, SVMBuffer results, int number, String kernelName, int globalSize){
         kernelName += "Buffer" + this.type.toString() + values.type.toString() + results.type.toString();
-        // System.out.println(kernelName);
         if(this.type == Type.FLOAT && values.type == Type.FLOAT){
             SVMBufferSupport.executeKernelWithTypesBufferFFFI(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, values.svmBuffer, results.svmBuffer, number, globalSize, kernelName);
         } else if(this.type == Type.FLOAT && values.type == Type.INT){
@@ -1141,7 +1137,6 @@ public class SVMBuffer {
 
     private SVMBuffer executeOperationWithArguments(SVMBuffer values, SVMBuffer results, String kernelName, int globalSize){
         kernelName += "Buffer" + this.type.toString() + values.type.toString() + results.type.toString();
-        // System.out.println(kernelName);
         if(this.type == Type.FLOAT && values.type == Type.FLOAT){
             SVMBufferSupport.executeKernelWithTypesBufferFFF(info.GetProgram(), info.GetCommandQueue(), this.svmBuffer, values.svmBuffer, results.svmBuffer, globalSize, kernelName);
         } else if(this.type == Type.FLOAT && values.type == Type.INT){
