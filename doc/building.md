@@ -9,7 +9,8 @@ on Windows) and cloned the top-level JDK repository that you want to build.
  1. [Install OpenCL](#install-opencl)
 
  2. [Get the complete source code](#getting-the-source-code): \
-    `git clone https://git.openjdk.org/jdk/`
+    `git clone https://git.openjdk.org/jdk/` and checkout GPUVector branch `git
+    checkout GPUVector`.
 
  3. [Run configure](#running-configure): \
     For Linux: `bash configure --with-extra-cxxflags=-lOpenCL`
